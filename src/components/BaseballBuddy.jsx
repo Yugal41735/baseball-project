@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { MessageCircle, Video, Brain, Settings, PlayCircle, PauseCircle, Book, Calendar } from 'lucide-react';
+import { MessageCircle, Video, Brain, Settings, PlayCircle, PauseCircle, Book, Calendar, Send } from 'lucide-react';
 import CommentaryGenerator from '../services/commentaryGenerator';
 import BaseballField from './BaseballField';
 import PitchDisplay from './PitchDisplay';
@@ -22,12 +22,19 @@ const BaseballBuddy = () => {
   const [selectedGameId, setSelectedGameId] = useState(null);
   const [mlbService] = useState(new MLBDataService());
   const [gameAnalytics, setGameAnalytics] = useState(null);
+  const [chatMessages, setChatMessages] = useState([{
+    type: 'ai',
+    content: "Hi! I'm your Baseball Expert. Ask me anything about the game, rules, or stats!",
+    timestamp: Date.now()
+  }]);
   const [simulationState, setSimulationState] = useState({
     isLoaded: false,
     currentPlayIndex: 0,
     speed: 1, // playback speed multiplier
     totalPlays: 0
   });
+
+  const chatEndRef = useRef(null);
   
 
   const personalityModes = [
@@ -49,6 +56,12 @@ const BaseballBuddy = () => {
     setMessages([]);
     setGameState(null);
     setGameAnalytics(null);
+    setSimulationState({  // Reset simulation state completely
+      isLoaded: false,
+      currentPlayIndex: 0,
+      speed: 1,
+      totalPlays: 0
+    });
     
     // First check the game status
     console.log("Game selected:", gameId);
@@ -57,6 +70,13 @@ const BaseballBuddy = () => {
     // console.log("Game state:", gameData.gameState);
     // const analytics = await mlbService.getGameAnalytics(gameId);
     // setGameAnalytics(analytics);
+    console.log("Game Data: ",gameData.gameData);
+
+    if (gameData.gameState) {
+      setGameState(gameData.gameState);
+      const analytics = await mlbService.getGameAnalytics(gameId);
+      setGameAnalytics(analytics);
+    }
 
 
     
@@ -77,9 +97,20 @@ const BaseballBuddy = () => {
                 timestamp: Date.now()
             }]);
         }
+    } else if(gameData.status === 'Preview') {
+      console.log("Upcoming Matches");
+      setMessages([{
+        type: 'ai',
+        content: `Welcome to the matchup between ${gameData.gameData.teams.away.name} and ${gameData.gameData.teams.home.name} at ${gameData.gameData.venue.name} on ${new Date(gameData.gameData.datetime.dateTime).toLocaleDateString('en-US', { 
+            weekday: 'long',
+            year: 'numeric', 
+            month: 'long', 
+            day: 'numeric' 
+        })}! The game is scheduled to start at ${new Date(gameData.gameData.datetime.dateTime).toLocaleTimeString()}.`,
+        timestamp: Date.now()
+      }]);
     } else {
-
-      console.log("Other GAMES");
+      console.log("Live Games!!!");
         // Reset simulation state for live games
         setSimulationState(prev => ({
             ...prev,
@@ -88,11 +119,11 @@ const BaseballBuddy = () => {
         }));
         
         // Set initial game state for live game
-        if (gameData.gameState) {
-          setGameState(gameData.gameState);
-          const analytics = await mlbService.getGameAnalytics(gameId);
-          setGameAnalytics(analytics);
-        }
+        // if (gameData.gameState) {
+        //   setGameState(gameData.gameState);
+        //   const analytics = await mlbService.getGameAnalytics(gameId);
+        //   setGameAnalytics(analytics);
+        // }
     }
   };
 
@@ -175,24 +206,76 @@ const BaseballBuddy = () => {
     }
   }, [gameState]);
 
-  const handleUserMessage = (message) => {
+  // Add chat scroll effect
+  useEffect(() => {
+    chatEndRef.current?.scrollIntoView({ behavior: "smooth" });
+  }, [chatMessages]);
+
+  // Add chat message handler
+  const handleChatMessage = async (message) => {
+    if (!message.trim()) return;
+
     // Add user message
-    setMessages(prev => [...prev, {
+    setChatMessages(prev => [...prev, {
       type: 'user',
       content: message,
       timestamp: Date.now()
     }]);
+
+    // Generate expert response based on game context
+    // let expertResponse = "I'll need to implement the expert response logic here.";
     
-    // Generate AI response based on current state and mode
-    const response = commentaryGen.generateCommentary(gameState, selectedMode);
-    setTimeout(() => {
-      setMessages(prev => [...prev, {
+    // Add AI response
+    // setTimeout(() => {
+    //   setChatMessages(prev => [...prev, {
+    //     type: 'ai',
+    //     content: expertResponse,
+    //     timestamp: Date.now()
+    //   }]);
+    // }, 500);
+
+    try {
+      // Get expert response
+      const response = await commentaryGen.generateExpertResponse(
+        message,
+        gameState,
+        gameAnalytics
+      );
+  
+      // Add AI response
+      setChatMessages(prev => [...prev, {
         type: 'ai',
         content: response,
         timestamp: Date.now()
       }]);
-    }, 500);
+    } catch (error) {
+      console.error('Error generating expert response:', error);
+      setChatMessages(prev => [...prev, {
+        type: 'ai',
+        content: "I apologize, but I'm having trouble processing your question right now.",
+        timestamp: Date.now()
+      }]);
+    }
   };
+
+  // const handleUserMessage = (message) => {
+  //   // Add user message
+  //   setMessages(prev => [...prev, {
+  //     type: 'user',
+  //     content: message,
+  //     timestamp: Date.now()
+  //   }]);
+    
+  //   // Generate AI response based on current state and mode
+  //   const response = commentaryGen.generateCommentary(gameState, selectedMode);
+  //   setTimeout(() => {
+  //     setMessages(prev => [...prev, {
+  //       type: 'ai',
+  //       content: response,
+  //       timestamp: Date.now()
+  //     }]);
+  //   }, 500);
+  // };
 
   return (
     <div className="flex flex-col h-screen bg-gray-100">
@@ -215,9 +298,9 @@ const BaseballBuddy = () => {
               <Book className="w-6 h-6" />
               <span className="text-sm">Learning Mode</span>
             </button>
-              <button className="p-2 hover:bg-blue-700 rounded">
-                <Settings className="w-6 h-6" />
-              </button>
+            <button className="p-2 hover:bg-blue-700 rounded">
+              <Settings className="w-6 h-6" />
+            </button>
           </div>
         </div>
       </div>
@@ -323,7 +406,7 @@ const BaseballBuddy = () => {
         </div>
 
         {/* AI Companion Panel */}
-        <div className="w-96 bg-white rounded-lg shadow-lg p-4 flex flex-col h-[800px]">
+        <div className="w-96 bg-white rounded-lg shadow-lg p-4 flex flex-col h-[950px]">
           {/* Personality Mode Selector */}
           <div className="mb-4">
             <h2 className="font-bold mb-2">Choose Your Buddy's Style:</h2>
@@ -349,53 +432,92 @@ const BaseballBuddy = () => {
           </div>
 
           {/* Chat Interface */}
-          <div className="flex-1 border rounded-lg p-4 bg-gray-50 overflow-y-auto min-h-0">
-            {messages.map((message, index) => (
-              <div key={index} className={`flex items-start mb-4 ${
-                message.type === 'user' ? 'justify-end' : ''
-              }`}>
-                <div className={`rounded-lg p-3 max-w-[80%] ${
-                  message.type === 'user' 
-                    ? 'bg-blue-600 text-white' 
-                    : 'bg-blue-100 text-gray-800'
+          <div className='mb-6'>
+            <h3 className='font-bold text-gray-700 mb-2'>AI Commentary</h3>
+            <div className="flex-1 border rounded-lg p-4 bg-gray-50 overflow-y-auto h-[300px] min-h-0">
+              {messages.map((message, index) => (
+                <div key={index} className={`flex items-start mb-4 ${
+                  message.type === 'user' ? 'justify-end' : ''
                 }`}>
-                  <p>{message.content}</p>
-                  <div className={`text-xs mt-1 ${
-                    message.type === 'user' ? 'text-blue-100' : 'text-gray-500'
+                  <div className={`rounded-lg p-3 max-w-[80%] ${
+                    message.type === 'user' 
+                      ? 'bg-blue-600 text-white' 
+                      : 'bg-blue-100 text-gray-800'
                   }`}>
-                    {new Date(message.timestamp).toLocaleTimeString()}
+                    <p>{message.content}</p>
+                    <div className={`text-xs mt-1 ${
+                      message.type === 'user' ? 'text-blue-100' : 'text-gray-500'
+                    }`}>
+                      {new Date(message.timestamp).toLocaleTimeString()}
+                    </div>
                   </div>
                 </div>
-              </div>
-            ))}
-            <div ref={messagesEndRef} />
+              ))}
+              <div ref={messagesEndRef} />
+            </div>
           </div>
 
-          {/* Input Area */}
-          <div className="mt-4 flex items-center">
-            <input
-              type="text"
-              placeholder="Ask your baseball buddy..."
-              className="flex-1 p-2 border rounded-lg mr-2"
-              onKeyPress={(e) => {
-                if (e.key === 'Enter' && e.target.value.trim()) {
-                  handleUserMessage(e.target.value);
-                  e.target.value = '';
-                }
-              }}
-            />
-            <button 
-              className="p-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
-              onClick={() => {
-                const input = document.querySelector('input');
-                if (input.value.trim()) {
-                  handleUserMessage(input.value);
-                  input.value = '';
-                }
-              }}
-            >
-              <MessageCircle className="w-5 h-5" />
-            </button>
+          {/* Expert Chat Section */}
+          <div className="h-72 border rounded-lg bg-gray-50">
+            <div className="flex flex-col h-full">
+              {/* Chat Header */}
+              <div className="p-2 bg-blue-50 border-b">
+                <h3 className="text-sm font-medium text-gray-700">Ask Baseball Expert</h3>
+              </div>
+              
+              {/* Chat Messages */}
+              <div className="flex-1 p-2 overflow-y-auto">
+                {chatMessages.map((message, index) => (
+                  <div 
+                    key={index} 
+                    className={`mb-2 flex ${message.type === 'user' ? 'justify-end' : 'justify-start'}`}
+                  >
+                    <div className={`rounded-lg p-2 max-w-[80%] ${
+                      message.type === 'user' 
+                        ? 'bg-blue-600 text-white' 
+                        : 'bg-gray-100 text-gray-800'
+                    }`}>
+                      <p className="text-sm">{message.content}</p>
+                      <div className={`text-xs mt-1 ${
+                        message.type === 'user' ? 'text-blue-100' : 'text-gray-500'
+                      }`}>
+                        {new Date(message.timestamp).toLocaleTimeString()}
+                      </div>
+                    </div>
+                  </div>
+                ))}
+                <div ref={chatEndRef} />
+              </div>
+
+              {/* Chat Input */}
+              <div className="p-2 border-t bg-white">
+                <div className="flex gap-2">
+                  <input
+                    type="text"
+                    placeholder="Ask about the game..."
+                    className="flex-1 p-2 border rounded text-sm"
+                    onKeyPress={(e) => {
+                      if (e.key === 'Enter' && e.target.value.trim()) {
+                        handleChatMessage(e.target.value);
+                        e.target.value = '';
+                      }
+                    }}
+                  />
+                  <button 
+                    className="p-2 bg-blue-600 text-white rounded hover:bg-blue-700"
+                    onClick={() => {
+                      const input = document.querySelector('input[placeholder="Ask about the game..."]');
+                      if (input && input.value.trim()) {
+                        handleChatMessage(input.value);
+                        input.value = '';
+                      }
+                    }}
+                  >
+                    <Send className="w-4 h-4" />
+                  </button>
+                </div>
+              </div>
+            </div>
           </div>
         </div>
       </div>

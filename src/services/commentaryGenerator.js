@@ -372,6 +372,67 @@ class CommentaryGenerator {
         return `Final Score: ${gameState.awayTeam} ${gameState.score.away}, ${gameState.homeTeam} ${gameState.score.home}`;
     }
   }
+
+  // Add to CommentaryGenerator class
+
+  async generateExpertResponse(question, gameState, gameAnalytics) {
+    const context = this.buildGameContext(gameState, gameAnalytics);
+    
+    const prompt = `You are a knowledgeable baseball expert having a conversation with a fan.
+    Current game context:
+    ${context}
+
+    Fan's question: "${question}"
+
+    Provide a clear, informative response focusing on:
+    - Direct answer to the question
+    - Relevant game context if applicable
+    - Brief explanations for any technical terms
+    Keep response concise but informative (2-3 sentences).`;
+
+    try {
+      this.model = this.genAI.getGenerativeModel({
+        model: "gemini-2.0-flash-exp",
+        systemInstruction: "You are a baseball expert providing quick, accurate responses about the current game, baseball rules, and strategy."
+      });
+      
+      const result = await this.model.generateContent(prompt);
+      const response = await result.response;
+      return response.text();
+    } catch (error) {
+      console.error('Expert response generation error:', error);
+      return this.createFallbackExpertResponse(question, gameState);
+    }
+  }
+
+  buildGameContext(gameState, gameAnalytics) {
+    if (!gameState) return "Game hasn't started yet.";
+
+    return `
+      Current situation:
+      - ${gameState.inningHalf} of inning ${gameState.inning}
+      - Score: ${gameState.score.away}-${gameState.score.home}
+      - Current batter: ${gameState.batter?.name} (AVG: ${gameState.batter?.average})
+      - Current pitcher: ${gameState.pitcher?.name} (Pitches: ${gameState.pitcher?.pitchCount}, K: ${gameState.pitcher?.strikeouts})
+      ${gameState.lastPitch ? `- Last pitch: ${gameState.lastPitch.type} at ${gameState.lastPitch.speed} MPH` : ''}
+    `;
+  }
+
+  createFallbackExpertResponse(question, gameState) {
+    // Basic fallback responses if AI generation fails
+    const fallbacks = {
+      score: `The current score is ${gameState?.score?.away}-${gameState?.score?.home}.`,
+      pitcher: `The current pitcher is ${gameState?.pitcher?.name}.`,
+      batter: `The current batter is ${gameState?.batter?.name}.`,
+      default: "I apologize, but I'm having trouble accessing that information right now."
+    };
+
+    const q = question.toLowerCase();
+    if (q.includes('score')) return fallbacks.score;
+    if (q.includes('pitcher')) return fallbacks.pitcher;
+    if (q.includes('batter') || q.includes('hitting')) return fallbacks.batter;
+    return fallbacks.default;
+  }
 }
 
 export default CommentaryGenerator;

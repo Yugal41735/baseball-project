@@ -39,7 +39,8 @@ class MLBDataService {
       if (data.gameData && data.liveData) {
         return {
           status: data.gameData.status.abstractGameState,
-          gameState: this.formatLiveGameState(data)
+          gameState: this.formatLiveGameState(data),
+          gameData: data.gameData
         };
       } else {
         return {
@@ -165,7 +166,7 @@ class MLBDataService {
     const player = homePlayer || awayPlayer;
 
     const avgStat = player?.seasonStats.batting.avg;
-    console.log(avgStat)
+    console.log(avgStat);
 
     console.log(batterStats);
 
