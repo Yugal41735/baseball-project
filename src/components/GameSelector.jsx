@@ -1,13 +1,25 @@
 import React, { useState, useEffect } from 'react';
-import { Calendar, Clock, MapPin, ChevronLeft, ChevronRight } from 'lucide-react';
+import { Clock, MapPin } from 'lucide-react';
 import MLBDataService from '../services/mlbDataService';
 
-const RECENT_SEASONS = [2024, 2023, 2022, 2021, 2020];
+const RECENT_SEASONS = [2026, 2025, 2024, 2023, 2022, 2021, 2020];
 const GAME_TYPES = [
   { value: 'R', label: 'Regular Season' },
   { value: 'P', label: 'Postseason' },
   { value: 'S', label: 'Spring Training' }
 ];
+
+const MONTHS = [
+  "January", "February", "March", "April", "May", "June",
+  "July", "August", "September", "October", "November", "December"
+];
+
+// Add getDaysInMonth function
+const getDaysInMonth = (date) => {
+  const year = date.getFullYear();
+  const month = date.getMonth();
+  return new Date(year, month + 1, 0).getDate();
+};
 
 const GameSelector = ({ onSelectGame, isVisible, onClose }) => {
   const [selectedDate, setSelectedDate] = useState(new Date());
@@ -61,12 +73,6 @@ const GameSelector = ({ onSelectGame, isVisible, onClose }) => {
     }
   }, [isVisible, selectedDate, selectedYear, selectedGameType]);
 
-  const changeDate = (days) => {
-    const newDate = new Date(selectedDate);
-    newDate.setDate(selectedDate.getDate() + days);
-    setSelectedDate(newDate);
-  };
-
   if (!isVisible) return null;
 
   return (
@@ -78,49 +84,53 @@ const GameSelector = ({ onSelectGame, isVisible, onClose }) => {
           
           {/* Date Selector */}
           <div className="flex items-center justify-between bg-white rounded-lg p-2 shadow-sm">
-            <button 
-              onClick={() => changeDate(-1)}
-              className="p-1 hover:bg-gray-100 rounded"
+            {/* Year Selection */}
+            <select
+              value={selectedDate.getFullYear()}
+              onChange={(e) => {
+                const newDate = new Date(selectedDate);
+                newDate.setFullYear(e.target.value);
+                setSelectedDate(newDate);
+              }}
+              className="p-1 border rounded"
             >
-              <ChevronLeft className="w-5 h-5" />
-            </button>
-            <div className="flex items-center gap-4">
-              {/* Month Selector */}
-              <select
-                value={selectedDate.getMonth()}
-                onChange={(e) => {
-                  const newDate = new Date(selectedDate);
-                  newDate.setMonth(e.target.value);
-                  setSelectedDate(newDate);
-                }}
-                className="p-1 border rounded"
-              >
-                {[
-                  "January", "February", "March", "April", "May", "June",
-                  "July", "August", "September", "October", "November", "December"
-                ].map((month, index) => (
-                  <option key={index} value={index}>{month}</option>
-                ))}
-              </select>
-              <div className="flex items-center gap-2">
-                <Calendar className="w-5 h-5 text-blue-600" />
-                <span className="font-medium">
-                  {selectedDate.toLocaleDateString('en-US', {
-                    weekday: 'short',
-                    month: 'short',
-                    day: 'numeric',
-                    year: 'numeric'
-                  })}
-                </span>
-              </div>
-            </div>
-            
-            <button 
-              onClick={() => changeDate(1)}
-              className="p-1 hover:bg-gray-100 rounded"
+              {RECENT_SEASONS.map(year => (
+                <option key={year} value={year}>{year}</option>
+              ))}
+            </select>
+
+            {/* Month Selection */}
+            <select
+              value={selectedDate.getMonth()}
+              onChange={(e) => {
+                const newDate = new Date(selectedDate);
+                newDate.setMonth(e.target.value);
+                setSelectedDate(newDate);
+              }}
+              className="p-1 border rounded"
             >
-              <ChevronRight className="w-5 h-5" />
-            </button>
+              {MONTHS.map((month, index) => (
+                <option key={index} value={index}>{month}</option>
+              ))}
+            </select>
+
+            {/* Day Selection */}
+            <select
+              value={selectedDate.getDate()}
+              onChange={(e) => {
+                const newDate = new Date(selectedDate);
+                newDate.setDate(e.target.value);
+                setSelectedDate(newDate);
+              }}
+              className="p-1 border rounded"
+            >
+              {Array.from(
+                { length: getDaysInMonth(selectedDate) },
+                (_, i) => i + 1
+              ).map(day => (
+                <option key={day} value={day}>{day}</option>
+              ))}
+            </select>
           </div>
         </div>
 
