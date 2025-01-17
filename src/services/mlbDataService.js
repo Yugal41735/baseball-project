@@ -170,6 +170,8 @@ class MLBDataService {
 
     console.log(batterStats);
 
+    console.log("Team Info: ", this.currentBoxscore.teams);
+
     // const pitchesThisAtBat = play.playEvents?.length || 0;
     // this.gameStats.currentPitchCount += pitchesThisAtBat;
 
@@ -200,17 +202,29 @@ class MLBDataService {
       strikes: play.count?.strikes || 0,
       outs: play.count?.outs || 0,
       baseRunners: this.formatRunnersForPlay(play),
+      teams: {
+        home: {
+          id: this.currentBoxscore.teams.home.team.id,
+          name: this.currentBoxscore.teams.home.team.name
+        },
+        away: {
+          id: this.currentBoxscore.teams.away.team.id,
+          name: this.currentBoxscore.teams.away.team.name
+        }
+      },
       score: {
         away: play.result.awayScore || 0,
         home: play.result.homeScore || 0
       },
       batter: {
+        id: play.matchup?.batter?.id || null,
         name: play.matchup?.batter?.fullName || "Unknown Batter",
         average: avgStat || '.000',
         atBats: batterStats?.atBats || 0,
         strikeouts: batterStats?.strikeOuts || 0
       },
       pitcher: {
+        id: play.matchup?.pitcher?.id || null,
         name: play.matchup?.pitcher?.fullName || "Unknown Pitcher",
         pitchCount: pitcherStats?.numberOfPitches || 0,
         strikeouts: pitcherStats?.strikeOuts
@@ -263,12 +277,14 @@ class MLBDataService {
       status: game.status.abstractGameState,
       detailedState: game.status.detailedState,
       homeTeam: {
+        id: game.teams.home.team.id,
         name: game.teams.home.team.name,
         score: game.teams.home.score || 0,
         record: game.teams.home.leagueRecord ?
             `${game.teams.home.leagueRecord.wins}-${game.teams.home.leagueRecord.losses}` : null
       },
       awayTeam: {
+        id: game.teams.away.team.id,
         name: game.teams.away.team.name,
         score: game.teams.away.score || 0,
         record: game.teams.away.leagueRecord ?
@@ -320,8 +336,18 @@ class MLBDataService {
         outs: linescore.outs || 0,
         baseRunners: this.getBaseRunners(linescore),
         score: {
-            away: linescore.teams.away.runs || 0,
-            home: linescore.teams.home.runs || 0
+          away: linescore.teams.away.runs || 0,
+          home: linescore.teams.home.runs || 0
+        },
+        teams: {  // Add team info
+          away: {
+            id: gameData.gameData.teams.away.id,
+            name: gameData.gameData.teams.away.name
+          },
+          home: {
+            id: gameData.gameData.teams.home.id,
+            name: gameData.gameData.teams.home.name
+          }
         },
         pitcher: this.getCurrentPitcher(gameData),
         batter: this.getCurrentBatter(gameData),
@@ -349,6 +375,7 @@ class MLBDataService {
       if (!pitcher) return null;
   
       return {
+        id: pitcher.id,
         name: pitcher.fullName || "Unknown Pitcher",
         pitchCount: (currentPlay.count && currentPlay.count.pitches) || 0,
         strikeouts: pitcher.stats && pitcher.stats.pitching ? 
@@ -357,6 +384,7 @@ class MLBDataService {
     } catch (error) {
       console.log('Error getting pitcher data:', error);
       return {
+        id: null,
         name: "Unknown Pitcher",
         pitchCount: 0,
         strikeouts: 0
@@ -371,8 +399,11 @@ class MLBDataService {
   
       const batter = gameData.gameData.players[`ID${currentPlay.matchup.batter.id}`];
       if (!batter) return null;
+
+      console.log("Batter info: ", batter);
   
       return {
+        id: batter.id,
         name: batter.fullName || "Unknown Batter",
         average: batter.stats && batter.stats.batting ? 
           `.${Math.round(batter.stats.batting.avg * 1000)}` : '.000'
@@ -380,6 +411,7 @@ class MLBDataService {
     } catch (error) {
       console.log('Error getting batter data:', error);
       return {
+        id: null,
         name: "Unknown Batter",
         average: '.000'
       };
@@ -752,6 +784,8 @@ class MLBDataService {
   
       // 10) Return the record and details for these last 5
       return {
+        awayTeamId,
+        homeTeamId,
         homeTeamName,
         awayTeamName,
         home: homeWins,

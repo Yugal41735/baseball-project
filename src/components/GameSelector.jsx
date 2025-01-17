@@ -183,6 +183,43 @@ const GameSelector = ({ onSelectGame, isVisible, onClose }) => {
                 >
                   <div className="flex justify-between items-start mb-2">
                     <div>
+                      <div className="flex items-center gap-4 mb-2">
+                        {/* Away Team */}
+                        <div className="flex items-center gap-2">
+                          <img 
+                            src={`https://www.mlbstatic.com/team-logos/${game.awayTeam.id}.svg`}
+                            alt={game.awayTeam.name}
+                            className="w-6 h-6"
+                          />
+                          <div className="font-bold">
+                            {game.awayTeam.name}
+                          </div>
+                        </div>
+                        <span className="text-gray-500 font-medium">vs</span>
+                        {/* Home Team */}
+                        <div className="flex items-center gap-2">
+                          <img 
+                            src={`https://www.mlbstatic.com/team-logos/${game.homeTeam.id}.svg`}
+                            alt={game.homeTeam.name}
+                            className="w-6 h-6"
+                          />
+                          <div className="font-bold">
+                            {game.homeTeam.name}
+                          </div>
+                        </div>
+                      </div>
+                      {/* Time Info */}
+                      <div className="text-sm text-gray-600 flex items-center gap-4">
+                        <div className="flex items-center gap-1">
+                          <Clock className="w-4 h-4" />
+                          {new Date(game.startTime).toLocaleTimeString([], {
+                            hour: 'numeric',
+                            minute: '2-digit'
+                          })}
+                        </div>
+                      </div>
+                    </div>
+                    {/* <div>
                       <div className="font-bold text-lg">
                         {game.awayTeam.name} @ {game.homeTeam.name}
                       </div>
@@ -193,16 +230,7 @@ const GameSelector = ({ onSelectGame, isVisible, onClose }) => {
                           minute: '2-digit'
                         })}
                       </div>
-                    </div>
-                    {/* <span className={`px-2 py-1 rounded text-sm ${
-                      game.status === 'Live' 
-                        ? 'bg-green-100 text-green-700'
-                        : game.status === 'Final'
-                        ? 'bg-gray-100 text-gray-700'
-                        : 'bg-blue-100 text-blue-700'
-                    }`}>
-                      {game.status}
-                    </span> */}
+                    </div> */}
                     {(() => {
                       const styles = getStatusStyles(game.status);
                       return (

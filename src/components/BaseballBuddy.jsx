@@ -258,6 +258,8 @@ const BaseballBuddy = () => {
     }
   };
 
+  console.log("Hello I am game state: ",gameState);
+
   // const handleUserMessage = (message) => {
   //   // Add user message
   //   setMessages(prev => [...prev, {
@@ -360,11 +362,44 @@ const BaseballBuddy = () => {
               {gameState ? (
                 <div className="space-y-2">
                   <div className="flex justify-between items-center">
-                    <span className="text-gray-600">
+                    <div className="flex justify-center items-center gap-6">
+                      {/* Away Team */}
+                      <div className="flex items-center gap-2">
+                        <img 
+                          src={`https://www.mlbstatic.com/team-logos/${gameState.teams?.away?.id}.svg`}
+                          alt={gameState.teams?.away?.name}
+                          className="w-8 h-8"
+                        />
+                        <div className="flex flex-col">
+                          <span className="text-sm text-gray-500">{gameState.teams?.away?.name}</span>
+                          <span className="text-lg font-bold">{gameState.score.away}</span>
+                        </div>
+                      </div>
+                      <span className="text-gray-400">vs</span>
+                      {/* Home Team */}
+                      <div className="flex items-center gap-2">
+                        <img 
+                          src={`https://www.mlbstatic.com/team-logos/${gameState.teams?.home?.id}.svg`}
+                          alt={gameState.teams?.home?.name}
+                          className="w-8 h-8"
+                        />
+                        <div className="flex flex-col">
+                          <span className="text-sm text-gray-500">{gameState.teams?.home?.name}</span>
+                          <span className="text-lg font-bold">{gameState.score.home}</span>
+                        </div>
+                      </div>
+                    </div>
+                    {/* <div className="text-gray-600 font-medium">
                       {gameState.inningHalf} {gameState.inning}
-                    </span>
-                    <span className="text-lg font-bold">
-                      {gameState.score.away}-{gameState.score.home}
+                    </div> */}
+                    {/* <span className="text-gray-600">
+                      {gameState.inningHalf} {gameState.inning}
+                    </span> */}
+                  </div>
+
+                  <div className="text-center mb-3">
+                    <span className="font-medium text-gray-700">
+                      {gameState.inningHalf} {gameState.inning}
                     </span>
                   </div>
                   
@@ -372,22 +407,58 @@ const BaseballBuddy = () => {
                     
                     <div className="bg-gray-50 p-2 rounded">
                       <p className="text-sm text-gray-500">At Bat</p>
-                      <p className="font-medium">
+                      <div className="flex items-center gap-3">
+                        <img 
+                          src={`https://securea.mlb.com/mlb/images/players/head_shot/${gameState.batter?.id}.jpg`}
+                          alt={gameState.batter?.name}
+                          className="w-12 h-12 rounded-full object-cover border-2 border-gray-200"
+                          onError={(e) => {
+                            e.target.src = '/placeholder-player.png' // Fallback image if headshot not found
+                          }}
+                        />
+                        <div>
+                          <p className="font-medium">
+                            {gameState.batter?.name || "No batter"}
+                          </p>
+                          <p className="text-sm text-gray-600">
+                            AVG: {gameState.batter?.average || '.000'}
+                          </p>
+                        </div>
+                      </div>
+                      {/* <p className="font-medium">
                         {gameState.batter?.name || "No batter"}
                       </p>
                       <p className="text-sm text-gray-600">
                         AVG: {gameState.batter?.average || '.000'}
-                      </p>
+                      </p> */}
                     </div>
                     
                     <div className="bg-gray-50 p-2 rounded">
                       <p className="text-sm text-gray-500">Pitching</p>
-                      <p className="font-medium">
+                      <div className="flex items-center gap-3">
+                        <img 
+                          src={`https://securea.mlb.com/mlb/images/players/head_shot/${gameState.pitcher?.id}.jpg`}
+                          alt={gameState.pitcher?.name}
+                          className="w-12 h-12 rounded-full object-cover border-2 border-gray-200"
+                          onError={(e) => {
+                            e.target.src = '/placeholder-player.png' // Fallback image if headshot not found
+                          }}
+                        />
+                        <div>
+                          <p className="font-medium">
+                            {gameState.pitcher?.name || "No pitcher"}
+                          </p>
+                          <p className="text-sm text-gray-600">
+                            Pitches: {gameState.pitcher?.pitchCount || 0} | K: {gameState.pitcher?.strikeouts || 0}
+                          </p>
+                        </div>
+                      </div>
+                      {/* <p className="font-medium">
                         {gameState.pitcher?.name || "No pitcher"}
                       </p>
                       <p className="text-sm text-gray-600">
                         Pitches: {gameState.pitcher?.pitchCount || 0} | K: {gameState.pitcher?.strikeouts || 0}
-                      </p>
+                      </p> */}
                     </div>
                   </div>
 
