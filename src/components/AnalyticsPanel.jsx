@@ -1,6 +1,6 @@
 import React from 'react';
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
-import { Table } from 'recharts';
+// import { Table } from 'recharts';
 
 const AnalyticsPanel = ({ gameData, gameStatus }) => {
   const renderHistoricalStats = () => (

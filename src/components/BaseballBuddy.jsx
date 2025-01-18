@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { MessageCircle, Video, Brain, Settings, PlayCircle, PauseCircle, Book, Calendar, Send } from 'lucide-react';
+import { Video, Brain, Settings, PlayCircle, PauseCircle, Book, Calendar, Send } from 'lucide-react';
 import CommentaryGenerator from '../services/commentaryGenerator';
 import BaseballField from './BaseballField';
 import PitchDisplay from './PitchDisplay';
@@ -194,7 +194,7 @@ const BaseballBuddy = () => {
       interval = setInterval(updateGameState, simulationState.isLoaded? 10000 : 20000); // Update every 20 seconds
     }
     return () => clearInterval(interval);
-  }, [isPlaying, selectedGameId, selectedMode, mlbService, simulationState.isLoaded, commentaryGen]);
+  }, [isPlaying, selectedGameId, selectedMode, mlbService, simulationState, commentaryGen, setGameState, setMessages]);
 
   useEffect(() => {
     if (isPlaying && selectedGameId) {
@@ -204,7 +204,7 @@ const BaseballBuddy = () => {
       };
       updateAnalytics();
     }
-  }, [gameState]);
+  }, [gameState, isPlaying, selectedGameId, mlbService, setGameAnalytics]);
 
   // Add chat scroll effect
   useEffect(() => {
