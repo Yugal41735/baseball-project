@@ -179,12 +179,12 @@ class MLBDataService {
     //   this.gameStats.strikeouts += 1;
     // }
 
-    const strikes = play.playEvents?.filter(event => 
-      event.details?.isStrike === true
-    ).length || 0;
-    const balls = play.playEvents?.filter(event => 
-        event.details?.isBall === true
-    ).length || 0;
+    // const strikes = play.playEvents?.filter(event => 
+    //   event.details?.isStrike === true
+    // ).length || 0;
+    // const balls = play.playEvents?.filter(event => 
+    //     event.details?.isBall === true
+    // ).length || 0;
 
     const pitchHistory = play.playEvents
         ?.filter(event => event.isPitch)
@@ -463,7 +463,7 @@ class MLBDataService {
   async getGameAnalytics(gamePk) {
     try {
       const data = await this.getGameData(gamePk);
-      const boxscore = data.liveData.boxscore;
+      // const boxscore = data.liveData.boxscore;
       const plays = data.liveData.plays;
       console.log("Game Data", data.gameData);
       const dateTime = data.gameData.datetime.dateTime;

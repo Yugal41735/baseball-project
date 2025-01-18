@@ -21,11 +21,13 @@ const getDaysInMonth = (date) => {
   return new Date(year, month + 1, 0).getDate();
 };
 
+const mlbService = new MLBDataService();
+
 const GameSelector = ({ onSelectGame, isVisible, onClose }) => {
   const [selectedDate, setSelectedDate] = useState(new Date());
   const [games, setGames] = useState([]);
   const [loading, setLoading] = useState(false);
-  const mlbService = new MLBDataService();
+  // const mlbService = new MLBDataService();
   const [selectedYear, setSelectedYear] = useState(new Date().getFullYear());
   const [selectedGameType, setSelectedGameType] = useState('R');
 
@@ -219,18 +221,6 @@ const GameSelector = ({ onSelectGame, isVisible, onClose }) => {
                         </div>
                       </div>
                     </div>
-                    {/* <div>
-                      <div className="font-bold text-lg">
-                        {game.awayTeam.name} @ {game.homeTeam.name}
-                      </div>
-                      <div className="text-sm text-gray-600 flex items-center gap-2">
-                        <Clock className="w-4 h-4" />
-                        {new Date(game.startTime).toLocaleTimeString([], {
-                          hour: 'numeric',
-                          minute: '2-digit'
-                        })}
-                      </div>
-                    </div> */}
                     {(() => {
                       const styles = getStatusStyles(game.status);
                       return (
@@ -240,11 +230,6 @@ const GameSelector = ({ onSelectGame, isVisible, onClose }) => {
                       );
                     })()}
                   </div>
-                  {/* {(game.status === 'Live' || game.status === 'Final') && (
-                    <div className="text-lg font-bold text-center bg-gray-50 py-1 rounded">
-                      {game.awayTeam.score} - {game.homeTeam.score}
-                    </div>
-                  )} */}
                   {(game.status === 'Live' || game.status === 'Final') && (
                     <div className="text-lg font-bold text-center bg-gray-50 py-2 rounded mt-2 border">
                       <div className="flex justify-between items-center px-4">
