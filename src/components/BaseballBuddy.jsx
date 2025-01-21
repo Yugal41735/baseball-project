@@ -9,6 +9,7 @@ import LearningMode from './LearningMode';
 import GameSelector from './GameSelector';
 import MLBDataService from '../services/mlbDataService';
 import AnalyticsPanel from './AnalyticsPanel';
+import WelcomeModal from './WelcomeModal';
 
 const BaseballBuddy = () => {
   const [commentaryGen] = useState(new CommentaryGenerator());
@@ -33,6 +34,7 @@ const BaseballBuddy = () => {
     speed: 1, // playback speed multiplier
     totalPlays: 0
   });
+  const [showWelcome, setShowWelcome] = useState(true);
 
   const chatEndRef = useRef(null);
   
@@ -280,6 +282,11 @@ const BaseballBuddy = () => {
   // };
 
   return (
+    <>
+    <WelcomeModal
+      isVisible={showWelcome}
+      onClose={() => setShowWelcome(false)}
+    />
     <div className="flex flex-col h-screen bg-gray-100">
       {/* Header */}
       <div className="bg-blue-600 text-white p-4">
@@ -603,6 +610,7 @@ const BaseballBuddy = () => {
         onSelectGame={handleGameSelect}
       />
     </div>
+    </>
   );
 };
 
