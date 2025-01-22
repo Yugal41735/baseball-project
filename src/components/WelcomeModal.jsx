@@ -1,3 +1,5 @@
+import React from 'react';
+
 const WelcomeModal = ({ isVisible, onClose, onStartTour }) => {
   if (!isVisible) return null;
 
@@ -15,7 +17,9 @@ const WelcomeModal = ({ isVisible, onClose, onStartTour }) => {
             <div className="bg-blue-100 p-2 rounded">1</div>
             <div>
               <h3 className="font-medium">Select a Game</h3>
-              <p className="text-sm text-gray-500">Choose from live, upcoming, or historical MLB games</p>
+              <p className="text-sm text-gray-500">
+                Choose from live, upcoming, or historical MLB games.
+              </p>
             </div>
           </div>
 
@@ -23,7 +27,9 @@ const WelcomeModal = ({ isVisible, onClose, onStartTour }) => {
             <div className="bg-blue-100 p-2 rounded">2</div>
             <div>
               <h3 className="font-medium">Pick Your Style</h3>
-              <p className="text-sm text-gray-500">Choose between Casual Fan, Stats Nerd, or History Buff commentary</p>
+              <p className="text-sm text-gray-500">
+                Choose between Casual Fan, Stats Nerd, or History Buff commentary.
+              </p>
             </div>
           </div>
 
@@ -31,7 +37,9 @@ const WelcomeModal = ({ isVisible, onClose, onStartTour }) => {
             <div className="bg-blue-100 p-2 rounded">3</div>
             <div>
               <h3 className="font-medium">Enjoy the Experience</h3>
-              <p className="text-sm text-gray-500">Get AI commentary, stats, and ask questions to our Baseball Expert</p>
+              <p className="text-sm text-gray-500">
+                Get AI commentary, stats, and ask questions to our Baseball Expert.
+              </p>
             </div>
           </div>
         </div>

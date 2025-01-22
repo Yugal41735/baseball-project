@@ -40,6 +40,7 @@ const BaseballBuddy = () => {
   const [activeView, setActiveView] = useState('game');
 
   const chatEndRef = useRef(null);
+  const [analyzingPlay, setAnalyzingPlay] = useState(null);
 
   const views = [
     {
@@ -70,8 +71,24 @@ const BaseballBuddy = () => {
   ];
 
   // Auto-scroll chat to bottom
-  const scrollToBottom = () => {
-    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+  // const scrollToBottom = () => {
+  //   messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+  // };
+
+  useEffect(() => {
+    const visited = localStorage.getItem('hasVisited');
+    if (!visited) {
+      // If there's no record, show the welcome modal
+      setShowWelcome(true);
+      // Then set that they've visited, so next time we skip it
+      localStorage.setItem('hasVisited', 'true');
+    } 
+    // If visited is 'true', do nothing; user won't see the welcome again
+  }, []);
+
+  const handlePlaySelect = (play) => {
+    setAnalyzingPlay(play);
+    setActiveView('analysis');  // Auto-switch to analysis view
   };
 
   
@@ -157,9 +174,9 @@ const BaseballBuddy = () => {
     setIsGameSelectorVisible(false);
   };
 
-  useEffect(() => {
-    scrollToBottom();
-  }, [messages]);
+  // useEffect(() => {
+  //   scrollToBottom();
+  // }, [messages]);
 
   // Update this useEffect in BaseballBuddy.jsx
   useEffect(() => {
@@ -291,7 +308,7 @@ const BaseballBuddy = () => {
       {/* Game Feed Section */}
       <div className="bg-white rounded-lg shadow-lg p-4">
         <div className="relative">
-          <div className="bg-gray-200 h-64 rounded flex items-center justify-center">
+          <div className="bg-gray-200 h-64 rounded flex items-center justify-center game-feed">
             <Video className="w-12 h-12 text-gray-400" />
             <span className="ml-2 text-gray-500">Game Feed Will Appear Here</span>
           </div>
@@ -343,7 +360,7 @@ const BaseballBuddy = () => {
 
       {/* Game Info & Field View */}
       <div className="grid grid-cols-2 gap-4">
-        <div className="bg-white rounded-lg shadow-lg p-4">
+        <div className="bg-white rounded-lg shadow-lg p-4 game-info">
           <h2 className="font-bold text-lg mb-2">Game Info</h2>
           {gameState ? (
             <div className="space-y-4">
@@ -353,7 +370,8 @@ const BaseballBuddy = () => {
                   {gameState.inningHalf} {gameState.inning}
                 </span>
                 <div className="mt-1 text-sm">
-                  {gameState.balls}-{gameState.strikes}, {gameState.outs} outs
+                Count: {gameState.balls}-{gameState.strikes} | 
+                Outs: {gameState.outs}
                 </div>
               </div>
               
@@ -405,7 +423,7 @@ const BaseballBuddy = () => {
           )}
         </div>
 
-        <div className="bg-white rounded-lg shadow-lg p-4">
+        <div className="bg-white rounded-lg shadow-lg p-4 field-view">
           <h2 className="font-bold text-lg mb-2">Field View</h2>
           <BaseballField baseRunners={gameState?.baseRunners || []} />
         </div>
@@ -416,21 +434,40 @@ const BaseballBuddy = () => {
   const renderAnalysisView = () => (
     <div className="space-y-4">
       <div className="grid grid-cols-2 gap-4">
-        <PitchDisplay lastPitch={gameState?.lastPitch} gameState={gameState} />
+        <div className='pitch-display'>
+          <PitchDisplay lastPitch={gameState?.lastPitch} gameState={gameState} highlightedPlay={analyzingPlay} />
+        </div>
         <GameStats gameState={gameState} />
         <PitchSequence gameState={gameState} />
-        <AnalyticsPanel 
-          gameData={gameAnalytics} 
-          gameStatus={gameState?.status || 'Preview'} 
-        />
+        <div className='analytics-panel'>
+          <AnalyticsPanel 
+            gameData={gameAnalytics} 
+            gameStatus={gameState?.status || 'Preview'} 
+          />
+        </div>
       </div>
+
+      {analyzingPlay && (
+      <div className="bg-blue-50 p-4 rounded-lg border border-blue-200">
+        <h3 className="font-bold mb-2">Analyzing Play:</h3>
+        <p>{analyzingPlay.description}</p>
+        <div className="mt-2 flex gap-2">
+          <button 
+            className="text-sm text-blue-600"
+            onClick={() => setActiveView('companion')}
+          >
+            View Commentary
+          </button>
+        </div>
+      </div>
+      )}
     </div>
   );
 
   const renderCompanionView = () => (
     <div className="space-y-4">
       {/* AI Commentary Section */}
-      <div className="bg-white rounded-lg shadow-lg p-4">
+      <div className="bg-white rounded-lg shadow-lg p-4 ai-commentary">
         <h2 className="font-bold text-lg mb-4">AI Commentary</h2>
         <div className="flex-1 border rounded-lg p-4 bg-gray-50 overflow-y-auto h-[300px]">
           {messages.map((message, index) => (
@@ -443,6 +480,14 @@ const BaseballBuddy = () => {
                   : 'bg-blue-100 text-gray-800'
               }`}>
                 <p>{message.content}</p>
+                {message.play && (  // Add this condition
+                  <button 
+                    className="text-xs text-blue-600 mt-1"
+                    onClick={() => handlePlaySelect(message.play)}
+                  >
+                    View Analysis
+                  </button>
+                )}
                 <div className={`text-xs mt-1 ${
                   message.type === 'user' ? 'text-blue-100' : 'text-gray-500'
                 }`}>
@@ -456,7 +501,7 @@ const BaseballBuddy = () => {
       </div>
 
       {/* Expert Chat Section */}
-      <div className="bg-white rounded-lg shadow-lg p-4">
+      <div className="bg-white rounded-lg shadow-lg p-4 baseball-expert">
         <h2 className="font-bold text-lg mb-4">Ask Baseball Expert</h2>
         <div className="flex flex-col h-[400px]">
           <div className="flex-1 overflow-y-auto mb-4">
@@ -511,7 +556,7 @@ const BaseballBuddy = () => {
       </div>
 
       {/* Personality Mode Section */}
-      <div className="bg-white rounded-lg shadow-lg p-4">
+      <div className="bg-white rounded-lg shadow-lg p-4 personality-modes">
         <h2 className="font-bold text-lg mb-4">Commentary Style</h2>
         <div className="flex flex-col space-y-2">
           {personalityModes.map(mode => (
@@ -889,14 +934,16 @@ const BaseballBuddy = () => {
       <GuidedTour 
         isVisible={showTour}
         onClose={() => setShowTour(false)}
+        onViewChange={(view) => setActiveView(view)}
       />
       <div className="flex h-screen bg-gray-100">
         {/* Sidebar Navigation */}
-        <div className="w-20 bg-white border-r flex flex-col items-center py-4">
+        <div className="w-20 bg-white border-r flex flex-col items-center py-4 nav-selector">
           {views.map(view => (
             <button
               key={view.id}
               onClick={() => setActiveView(view.id)}
+              data-view={view.id}
               className={`p-3 rounded-lg mb-2 flex flex-col items-center ${
                 activeView === view.id 
                   ? 'bg-blue-100 text-blue-600' 
@@ -909,7 +956,7 @@ const BaseballBuddy = () => {
           ))}
           
           {/* Game Controls */}
-          <div className="mt-auto space-y-2">
+          <div className="mt-auto space-y-2 game-controls">
             <button 
               className="p-3 rounded-lg text-gray-500 hover:bg-gray-100"
               onClick={() => setIsGameSelectorVisible(true)}
