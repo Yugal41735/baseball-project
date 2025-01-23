@@ -10,7 +10,8 @@ import GameSelector from './GameSelector';
 import MLBDataService from '../services/mlbDataService';
 import AnalyticsPanel from './AnalyticsPanel';
 import WelcomeModal from './WelcomeModal';
-import GuidedTour from './GuidedTour'; 
+import GuidedTour from './GuidedTour';
+import CompletionModal from './CompletionModal';
 
 const BaseballBuddy = () => {
   const [commentaryGen] = useState(new CommentaryGenerator());
@@ -41,6 +42,8 @@ const BaseballBuddy = () => {
 
   const chatEndRef = useRef(null);
   const [analyzingPlay, setAnalyzingPlay] = useState(null);
+  const [showCompletionModal, setShowCompletionModal] = useState(false);
+  const [completionType, setCompletionType] = useState('');
 
   const views = [
     {
@@ -933,8 +936,23 @@ const BaseballBuddy = () => {
       />
       <GuidedTour 
         isVisible={showTour}
-        onClose={() => setShowTour(false)}
+        onClose={() => {
+          setShowTour(false);
+          setShowCompletionModal(true);
+          setCompletionType('skipped');
+        }}
+        onComplete={() => {
+          setShowTour(false);
+          setShowCompletionModal(true);
+          setCompletionType('completed');
+        }}
         onViewChange={(view) => setActiveView(view)}
+      />
+      <CompletionModal 
+        isVisible={showCompletionModal}
+        onClose={() => setShowCompletionModal(false)}
+        type={completionType}
+        onSelectGame={() => setIsGameSelectorVisible(true)}
       />
       <div className="flex h-screen bg-gray-100">
         {/* Sidebar Navigation */}

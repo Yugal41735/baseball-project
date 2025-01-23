@@ -97,7 +97,7 @@ const TOOLTIP_WIDTH = 320;
 
 
 
-const GuidedTour = ({ isVisible, onClose, onViewChange }) => {
+const GuidedTour = ({ isVisible, onClose, onViewChange, onComplete }) => {
   const [currentStep, setCurrentStep] = useState(0);
   const [targetElement, setTargetElement] = useState(null);
 
@@ -183,8 +183,14 @@ const GuidedTour = ({ isVisible, onClose, onViewChange }) => {
     if (currentStep < TOUR_STEPS.length - 1) {
       setCurrentStep(currentStep + 1);
     } else {
-      onClose();
+        onComplete ? onComplete() : onClose();
+    //   onClose();
     }
+  };
+
+  const handleClose = () => {
+    // This is for the X button or early exit
+    onClose();
   };
 
   const handlePrev = () => {
@@ -332,7 +338,7 @@ const GuidedTour = ({ isVisible, onClose, onViewChange }) => {
                 {stepLabel}
               </span>
               <button
-                onClick={onClose}
+                onClick={handleClose}
                 className="absolute right-2 top-2 text-gray-400 hover:text-gray-600"
               >
                 <X className="w-4 h-4" />
