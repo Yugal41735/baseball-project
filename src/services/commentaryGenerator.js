@@ -433,6 +433,27 @@ class CommentaryGenerator {
     if (q.includes('batter') || q.includes('hitting')) return fallbacks.batter;
     return fallbacks.default;
   }
+
+  async extractTeamColors(teamName) {
+    try {
+      const prompt = `
+      What are the two main colors (in RGB format like rgb(R,G,B)) used in ${teamName}'s official MLB team colors?
+      Return only two RGB values on separate lines, nothing else.`;
+  
+      const model = this.genAI.getGenerativeModel({ 
+        model: "gemini-2.0-flash-exp"
+      });
+      
+      const result = await model.generateContent(prompt);
+      const response = result.response;
+      const colors = response.text().split('\n').filter(Boolean);
+      
+      return colors;
+    } catch (error) {
+      console.error('Error extracting team colors:', error);
+      return null;
+    }
+  }
 }
 
 export default CommentaryGenerator;
