@@ -26,21 +26,3 @@ code {
   animation: modalEntry 0.3s ease-out;
 }
 
-
-@keyframes victory-slide {
-  from { transform: translateY(-100vh); }
-  to { transform: translateY(0); }
-}
-
-@keyframes victory-bars {
-  0%, 100% { height: 20px; }
-  50% { height: 80px; }
-}
-
-.animate-victory-slide {
-  animation: victory-slide 0.5s ease-out;
-}
-
-.animate-victory-bars {
-  animation: victory-bars 1s ease-in-out infinite;
-}

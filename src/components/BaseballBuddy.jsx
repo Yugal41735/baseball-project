@@ -653,6 +653,7 @@ const BaseballBuddy = () => {
         colors={winningTeamColors}
         isVisible={showVictoryAnimation}
         onComplete={() => setShowVictoryAnimation(false)}
+        gameType={'R'}
       />
       <div className="flex h-screen bg-gray-100">
         {/* Sidebar Navigation */}
