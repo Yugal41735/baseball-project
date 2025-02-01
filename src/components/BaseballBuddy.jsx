@@ -123,7 +123,10 @@ const BaseballBuddy = () => {
     console.log("Game Data: ",gameData.gameData);
 
     if (gameData.gameState) {
-      setGameState(gameData.gameState);
+      setGameState({
+        ...gameData.gameState,
+        status: gameData.status
+    });
       const analytics = await mlbService.getGameAnalytics(gameId);
       setGameAnalytics(analytics);
     }

@@ -321,6 +321,7 @@ class MLBDataService {
   }
 
   formatLiveGameState(gameData) {
+    console.log("Format game data: ", gameData);
     const plays = gameData.liveData.plays;
     const linescore = gameData.liveData.linescore;
 
@@ -329,6 +330,7 @@ class MLBDataService {
     }
     
     return {
+        status: gameData.gameData.status.abstractGameState,
         inning: linescore.currentInning || 0,
         inningHalf: linescore.inningHalf || 'top',
         balls: plays.currentPlay ? plays.currentPlay.count.balls : 0,
@@ -463,15 +465,18 @@ class MLBDataService {
   async getGameAnalytics(gamePk) {
     try {
       const data = await this.getGameData(gamePk);
-      // const boxscore = data.liveData.boxscore;
+      const boxscore = data.liveData.boxscore;
       const plays = data.liveData.plays;
       console.log("Game Data", data.gameData);
       const dateTime = data.gameData.datetime.dateTime;
       console.log(dateTime);
+      const keyPlays = this.extractKeyPlays(plays.allPlays);
+      console.log("Key plays: ", keyPlays);
       
       return {
+        teamStats: this.extractTeamStats(boxscore),
         winProbability: this.calculateWinProbability(plays.allPlays),
-        
+        keyPlays: keyPlays,
         headToHead: await this.getHeadToHeadRecord(
           data.gameData.teams.away.id,
           data.gameData.teams.home.id,
@@ -486,7 +491,7 @@ class MLBDataService {
 
   calculateWinProbability(plays) {
     return plays.map(play => ({
-      inning: `${play.about.inningHalf} ${play.about.inning}`,
+      inning: `${play.about.halfInning} ${play.about.inning}`,
       probability: this.calculateProbabilityForPlay(play)
     }));
   }
@@ -507,23 +512,47 @@ class MLBDataService {
   }
 
   extractKeyPlays(plays) {
+    console.log("Key Plays backend: ", plays);
     return plays
       .filter(play => play.about.isScoringPlay || 
                       play.result.eventType === 'strikeout' ||
                       play.about.isComplete)
       .map(play => ({
-        inning: `${play.about.inningHalf} ${play.about.inning}`,
+        type: play.result.eventType,
+        inning: `${play.about.halfInning} ${play.about.inning}`,
         description: play.result.description
       }));
   }
 
-  extractTeamStats(teamBoxscore) {
+  extractTeamStats(boxScore) {
+    console.log("Box scores: ", boxScore);
     return {
-      runs: teamBoxscore.teamStats.batting.runs || 0,
-      hits: teamBoxscore.teamStats.batting.hits || 0,
-      errors: teamBoxscore.teamStats.fielding.errors || 0,
-      battingAvg: teamBoxscore.teamStats.batting.avg || '.000',
-      leftOnBase: teamBoxscore.teamStats.batting.leftOnBase || 0
+      home: {
+        name: boxScore.teams.home.team.name,
+        homeRuns: boxScore.teams.home.teamStats.batting.homeRuns,
+        avg: boxScore.teams.home.teamStats.batting.avg,
+        rbi: boxScore.teams.home.teamStats.batting.rbi,
+        baseOnBalls: boxScore.teams.home.teamStats.batting.baseOnBalls,
+        strikeouts: boxScore.teams.home.teamStats.batting.strikeOuts,
+        runs: boxScore.teams.home.teamStats.batting.runs || 0,
+        hits: boxScore.teams.home.teamStats.batting.hits || 0,
+        errors: boxScore.teams.home.teamStats.fielding.errors || 0,
+        battingAvg: boxScore.teams.home.teamStats.batting.avg || '.000',
+        leftOnBase: boxScore.teams.home.teamStats.batting.leftOnBase || 0
+      },
+      away: {
+        name: boxScore.teams.away.team.name,
+        homeRuns: boxScore.teams.away.teamStats.batting.homeRuns,
+        avg: boxScore.teams.away.teamStats.batting.avg,
+        baseOnBalls: boxScore.teams.home.teamStats.batting.baseOnBalls,
+        rbi: boxScore.teams.away.teamStats.batting.rbi,
+        strikeouts: boxScore.teams.away.teamStats.batting.strikeOuts,
+        runs: boxScore.teams.away.teamStats.batting.runs || 0,
+        hits: boxScore.teams.away.teamStats.batting.hits || 0,
+        errors: boxScore.teams.away.teamStats.fielding.errors || 0,
+        battingAvg: boxScore.teams.away.teamStats.batting.avg || '.000',
+        leftOnBase: boxScore.teams.away.teamStats.batting.leftOnBase || 0
+      }
     };
   }
 

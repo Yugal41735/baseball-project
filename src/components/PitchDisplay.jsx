@@ -1,10 +1,9 @@
 import React, { useState, useEffect } from 'react';
+import { motion } from 'framer-motion';
 
 const PitchDisplay = ({ lastPitch, gameState }) => {
   const [pitchAnimation, setPitchAnimation] = useState(false);
 
-  console.log("pitch display: ", gameState);
-  
   useEffect(() => {
     if (lastPitch) {
       setPitchAnimation(true);
@@ -16,88 +15,106 @@ const PitchDisplay = ({ lastPitch, gameState }) => {
   const getPitchLocation = () => {
     return {
       x: 30 + Math.random() * 40,
-      y: 20 + Math.random() * 60
+      y: 20 + Math.random() * 60,
     };
   };
 
   const location = getPitchLocation();
 
   return (
-    <div className="border rounded p-4 bg-white">
+    <motion.div
+      initial={{ opacity: 0, y: 20 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.5 }}
+      className="border rounded p-4 bg-white shadow-sm"
+    >
       <h2 className="font-bold text-lg mb-2">Pitch Visualization</h2>
       <div className="relative w-full" style={{ height: '200px' }}>
         {/* Strike Zone */}
         <svg viewBox="0 0 100 100" className="w-full h-full">
           {/* Batter's Box */}
-          <rect 
-            x="20" y="10" 
-            width="60" height="80" 
-            fill="none" 
-            stroke="#ccc" 
+          <rect
+            x="20"
+            y="10"
+            width="60"
+            height="80"
+            fill="none"
+            stroke="#ccc"
             strokeWidth="1"
           />
-          
+
           {/* Strike Zone */}
-          <rect 
-            x="30" y="20" 
-            width="40" height="60" 
-            fill="none" 
-            stroke="#666" 
-            strokeWidth="2" 
+          <rect
+            x="30"
+            y="20"
+            width="40"
+            height="60"
+            fill="none"
+            stroke="#666"
+            strokeWidth="2"
             strokeDasharray="4"
           />
-          
+
           {/* Zone Grid */}
-          {[1, 2].map(x => (
-            <line 
+          {[1, 2].map((x) => (
+            <line
               key={`vertical-${x}`}
-              x1={30 + (x * 40/3)} 
-              y1="20" 
-              x2={30 + (x * 40/3)} 
-              y2="80" 
-              stroke="#ddd" 
+              x1={30 + (x * 40 / 3)}
+              y1="20"
+              x2={30 + (x * 40 / 3)}
+              y2="80"
+              stroke="#ddd"
               strokeWidth="1"
             />
           ))}
-          {[1, 2].map(y => (
-            <line 
+          {[1, 2].map((y) => (
+            <line
               key={`horizontal-${y}`}
-              x1="30" 
-              y1={20 + (y * 60/3)} 
-              x2="70" 
-              y2={20 + (y * 60/3)} 
-              stroke="#ddd" 
+              x1="30"
+              y1={20 + (y * 60 / 3)}
+              x2="70"
+              y2={20 + (y * 60 / 3)}
+              stroke="#ddd"
               strokeWidth="1"
             />
           ))}
-          
+
           {/* Pitch Location */}
           {lastPitch && (
-            <g className={pitchAnimation ? 'animate-ping' : ''}>
-              <circle 
-                cx={location.x} 
-                cy={location.y} 
+            <motion.g
+              initial={{ scale: 0 }}
+              animate={{ scale: pitchAnimation ? 1.2 : 1 }}
+              transition={{ type: 'spring', stiffness: 300 }}
+            >
+              <circle
+                cx={location.x}
+                cy={location.y}
                 r="2"
                 fill={lastPitch.result === 'strike' ? '#ef4444' : '#3b82f6'}
               />
-              <circle 
-                cx={location.x} 
-                cy={location.y} 
+              <circle
+                cx={location.x}
+                cy={location.y}
                 r="4"
                 fill="none"
                 stroke={lastPitch.result === 'strike' ? '#ef4444' : '#3b82f6'}
                 strokeWidth="1"
                 opacity="0.5"
               />
-            </g>
+            </motion.g>
           )}
         </svg>
 
         {/* Pitch Info Overlay */}
         {lastPitch && (
-          <div className="absolute top-2 right-2 bg-gray-800 text-white p-2 rounded text-sm opacity-80">
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ delay: 0.5 }}
+            className="absolute top-2 right-2 bg-gray-800 text-white p-2 rounded text-sm opacity-80"
+          >
             {lastPitch.type}: {lastPitch.speed} MPH
-          </div>
+          </motion.div>
         )}
       </div>
 
@@ -112,7 +129,7 @@ const PitchDisplay = ({ lastPitch, gameState }) => {
           Ball
         </div>
       </div>
-    </div>
+    </motion.div>
   );
 };
 
