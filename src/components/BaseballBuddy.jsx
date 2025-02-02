@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { Video, Brain, PlayCircle, PauseCircle, Book, Calendar, Send, ChartBar, MessageCircle, RefreshCw, ThumbsUp, ThumbsDown } from 'lucide-react';
+import { Video, Brain, PlayCircle, PauseCircle, Book, Calendar, Send, ChartBar, MessageCircle, RefreshCw, ThumbsUp, ThumbsDown, X } from 'lucide-react';
 import CommentaryGenerator from '../services/commentaryGenerator';
 import BaseballField from './BaseballField';
 import PitchDisplay from './PitchDisplay';
@@ -49,6 +49,7 @@ const BaseballBuddy = () => {
   const [winningTeamColors, setWinningTeamColors] = useState(null);
   const [winningTeam, setWinningTeam] = useState(null);
   const [messageRatings, setMessageRatings] = useState({});
+  const [isChatOpen, setIsChatOpen] = useState(false);
 
   const views = [
     {
@@ -583,12 +584,33 @@ const BaseballBuddy = () => {
           <div ref={messagesEndRef} />
         </div>
       </div>
+    </div>
+  );
 
-      {/* Expert Chat Section */}
-      <div className="bg-white rounded-lg shadow-lg p-4 baseball-expert">
-        <h2 className="font-bold text-lg mb-4">Ask Baseball Expert</h2>
-        <div className="flex flex-col h-[400px]">
-          <div className="flex-1 overflow-y-auto mb-4">
+  const FloatingExpertChat = () => (
+    <div className={`fixed bottom-4 right-4 z-50 transition-all duration-300 baseball-expert ${
+      isChatOpen 
+        ? 'w-96 h-[600px]' 
+        : 'w-auto h-auto'
+    }`}>
+      {isChatOpen ? (
+        <div className="bg-white rounded-lg shadow-xl flex flex-col h-full">
+          {/* Chat Header */}
+          <div className="p-4 border-b flex justify-between items-center">
+            <div className="flex items-center gap-2">
+              <MessageCircle className="w-5 h-5 text-blue-500" />
+              <h2 className="font-bold">Baseball Expert</h2>
+            </div>
+            <button 
+              onClick={() => setIsChatOpen(false)}
+              className="text-gray-500 hover:text-gray-700"
+            >
+              <X className="w-5 h-5" />
+            </button>
+          </div>
+  
+          {/* Chat Messages */}
+          <div className="flex-1 overflow-y-auto p-4">
             {chatMessages.map((message, index) => (
               <div 
                 key={index} 
@@ -607,6 +629,7 @@ const BaseballBuddy = () => {
                       {new Date(message.timestamp).toLocaleTimeString()}
                     </div>
                   </div>
+                  {/* Add back the thumbs up/down feedback buttons */}
                   {message.type === 'ai' && (
                     <div className="mt-1 opacity-0 group-hover:opacity-100 transition-opacity flex gap-1 justify-end">
                       <button
@@ -634,49 +657,57 @@ const BaseballBuddy = () => {
             ))}
             <div ref={chatEndRef} />
           </div>
-
-          {/* Add quick questions just above input */}
-          <div className="flex flex-wrap gap-2">
-            {quickQuestions.map((q, index) => (
-              <button
-                key={index}
-                onClick={() => handleChatMessage(q.text)}
-                className="text-sm text-blue-600 hover:bg-blue-50 px-3 py-1 rounded-full border border-blue-200 transition-colors"
-              >
-                {q.text}
-              </button>
-            ))}
-          </div>
-
-          <div className="flex gap-2">
-            <input
-              type="text"
-              placeholder="Ask about the game..."
-              className="flex-1 p-2 border rounded text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-              onKeyPress={(e) => {
-                if (e.key === 'Enter' && e.target.value.trim()) {
-                  handleChatMessage(e.target.value);
-                  e.target.value = '';
-                }
-              }}
-            />
-            <button 
-              className="p-2 bg-blue-600 text-white rounded hover:bg-blue-700 transition-colors"
-              onClick={() => {
-                const input = document.querySelector('input[placeholder="Ask about the game..."]');
-                if (input && input.value.trim()) {
-                  handleChatMessage(input.value);
-                  input.value = '';
-                }
-              }}
-            >
-              <Send className="w-4 h-4" />
-            </button>
+  
+          {/* Chat Input */}
+          <div className="p-4 border-t">
+            <div className="flex flex-col gap-2">
+              <div className="flex flex-wrap gap-2">
+                {quickQuestions.map((q, index) => (
+                  <button
+                    key={index}
+                    onClick={() => handleChatMessage(q.text)}
+                    className="text-sm text-blue-600 hover:bg-blue-50 px-3 py-1 rounded-full border border-blue-200 transition-colors"
+                  >
+                    {q.text}
+                  </button>
+                ))}
+              </div>
+              <div className="flex gap-2">
+                <input
+                  type="text"
+                  placeholder="Ask about the game..."
+                  className="flex-1 p-2 border rounded text-sm"
+                  onKeyPress={(e) => {
+                    if (e.key === 'Enter' && e.target.value.trim()) {
+                      handleChatMessage(e.target.value);
+                      e.target.value = '';
+                    }
+                  }}
+                />
+                <button 
+                  className="p-2 bg-blue-600 text-white rounded hover:bg-blue-700"
+                  onClick={() => {
+                    const input = document.querySelector('input[placeholder="Ask about the game..."]');
+                    if (input && input.value.trim()) {
+                      handleChatMessage(input.value);
+                      input.value = '';
+                    }
+                  }}
+                >
+                  <Send className="w-4 h-4" />
+                </button>
+              </div>
+            </div>
           </div>
         </div>
-      </div>
-
-      
+      ) : (
+        <button
+          onClick={() => setIsChatOpen(true)}
+          className="bg-blue-600 text-white p-4 rounded-full shadow-lg hover:bg-blue-700 transition-colors"
+        >
+          <MessageCircle className="w-6 h-6" />
+        </button>
+      )}
     </div>
   );
 
@@ -763,6 +794,7 @@ const BaseballBuddy = () => {
           {activeView === 'analysis' && renderAnalysisView()}
           {activeView === 'companion' && renderCompanionView()}
         </div>
+        <FloatingExpertChat />
       </div>
 
       {/* Modals */}
