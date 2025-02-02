@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { Video, Brain, PlayCircle, PauseCircle, Book, Calendar, Send, ChartBar, MessageCircle } from 'lucide-react';
+import { Video, Brain, PlayCircle, PauseCircle, Book, Calendar, Send, ChartBar, MessageCircle, RefreshCw, ThumbsUp, ThumbsDown } from 'lucide-react';
 import CommentaryGenerator from '../services/commentaryGenerator';
 import BaseballField from './BaseballField';
 import PitchDisplay from './PitchDisplay';
@@ -48,6 +48,7 @@ const BaseballBuddy = () => {
   const [showVictoryAnimation, setShowVictoryAnimation] = useState(false);
   const [winningTeamColors, setWinningTeamColors] = useState(null);
   const [winningTeam, setWinningTeam] = useState(null);
+  const [messageRatings, setMessageRatings] = useState({});
 
   const views = [
     {
@@ -75,6 +76,15 @@ const BaseballBuddy = () => {
     { id: 'casual', name: 'Casual Fan', description: 'Easy-going, fun explanations' },
     { id: 'stats', name: 'Stats Nerd', description: 'Deep dive into numbers' },
     { id: 'history', name: 'History Buff', description: 'Historical context and stories' }
+  ];
+
+  const quickQuestions = [
+    { text: "Who's pitching?", category: "players" },
+    { text: "What's the score?", category: "game" },
+    { text: "Last key play?", category: "plays" },
+    { text: "Current situation?", category: "game" },
+    { text: "Batting stats?", category: "stats" },
+    { text: "Pitching stats?", category: "stats" }
   ];
 
   // Auto-scroll chat to bottom
@@ -504,9 +514,45 @@ const BaseballBuddy = () => {
 
   const renderCompanionView = () => (
     <div className="space-y-4">
+      {/* Personality Mode Section */}
+      <div className="bg-white rounded-lg shadow-lg p-4 personality-modes">
+        <h2 className="font-bold text-lg mb-4">Commentary Style</h2>
+        <div className="flex flex-col space-y-2">
+          {personalityModes.map(mode => (
+            <button
+              key={mode.id}
+              className={`p-2 rounded-lg flex items-center ${
+                selectedMode === mode.id 
+                  ? 'bg-blue-100 text-blue-700 border-2 border-blue-500'
+                  : 'bg-gray-50 hover:bg-gray-100'
+              }`}
+              onClick={() => setSelectedMode(mode.id)}
+            >
+              <Brain className="w-5 h-5 mr-2" />
+              <div className="text-left">
+                <div className="font-medium">{mode.name}</div>
+                <div className="text-sm text-gray-500">{mode.description}</div>
+              </div>
+            </button>
+          ))}
+        </div>
+      </div>
+
       {/* AI Commentary Section */}
       <div className="bg-white rounded-lg shadow-lg p-4 ai-commentary">
-        <h2 className="font-bold text-lg mb-4">AI Commentary</h2>
+        <div className="flex items-center justify-between mb-4">
+          <h2 className="font-bold text-lg flex items-center gap-2">
+            <MessageCircle className="w-5 h-5 text-blue-500" />
+            AI Commentary
+          </h2>
+          <button
+            onClick={() => handleChatMessage("What happened in the last play?")}
+            className="text-sm text-blue-600 flex items-center gap-1 hover:bg-blue-50 p-1 rounded"
+          >
+            <RefreshCw className="w-4 h-4" />
+            Latest Update
+          </button>
+        </div>
         <div className="flex-1 border rounded-lg p-4 bg-gray-50 overflow-y-auto h-[300px]">
           {messages.map((message, index) => (
             <div key={index} className={`flex items-start mb-4 ${
@@ -518,7 +564,7 @@ const BaseballBuddy = () => {
                   : 'bg-blue-100 text-gray-800'
               }`}>
                 <p>{message.content}</p>
-                {message.play && (  // Add this condition
+                {message.play && (
                   <button 
                     className="text-xs text-blue-600 mt-1"
                     onClick={() => handlePlaySelect(message.play)}
@@ -548,28 +594,65 @@ const BaseballBuddy = () => {
                 key={index} 
                 className={`mb-2 flex ${message.type === 'user' ? 'justify-end' : 'justify-start'}`}
               >
-                <div className={`rounded-lg p-2 max-w-[80%] ${
-                  message.type === 'user' 
-                    ? 'bg-blue-600 text-white' 
-                    : 'bg-gray-100 text-gray-800'
-                }`}>
-                  <p className="text-sm">{message.content}</p>
-                  <div className={`text-xs mt-1 ${
-                    message.type === 'user' ? 'text-blue-100' : 'text-gray-500'
+                <div className="group max-w-[80%]">
+                  <div className={`rounded-lg p-2 ${
+                    message.type === 'user' 
+                      ? 'bg-blue-600 text-white' 
+                      : 'bg-gray-100 text-gray-800'
                   }`}>
-                    {new Date(message.timestamp).toLocaleTimeString()}
+                    <p className="text-sm">{message.content}</p>
+                    <div className={`text-xs mt-1 ${
+                      message.type === 'user' ? 'text-blue-100' : 'text-gray-500'
+                    }`}>
+                      {new Date(message.timestamp).toLocaleTimeString()}
+                    </div>
                   </div>
+                  {message.type === 'ai' && (
+                    <div className="mt-1 opacity-0 group-hover:opacity-100 transition-opacity flex gap-1 justify-end">
+                      <button
+                        onClick={() => {
+                          setMessageRatings(prev => ({...prev, [index]: true}));
+                          // Could send feedback to backend here
+                        }}
+                        className={`p-1 hover:bg-gray-100 rounded ${messageRatings[index] === true ? 'text-green-500' : ''}`}
+                      >
+                        <ThumbsUp className="w-4 h-4" />
+                      </button>
+                      <button
+                        onClick={() => {
+                          setMessageRatings(prev => ({...prev, [index]: false}));
+                          // Could send feedback to backend here
+                        }}
+                        className={`p-1 hover:bg-gray-100 rounded ${messageRatings[index] === false ? 'text-red-500' : ''}`}
+                      >
+                        <ThumbsDown className="w-4 h-4" />
+                      </button>
+                    </div>
+                  )}
                 </div>
               </div>
             ))}
             <div ref={chatEndRef} />
           </div>
 
+          {/* Add quick questions just above input */}
+          <div className="flex flex-wrap gap-2">
+            {quickQuestions.map((q, index) => (
+              <button
+                key={index}
+                onClick={() => handleChatMessage(q.text)}
+                className="text-sm text-blue-600 hover:bg-blue-50 px-3 py-1 rounded-full border border-blue-200 transition-colors"
+              >
+                {q.text}
+              </button>
+            ))}
+          </div>
+
           <div className="flex gap-2">
             <input
               type="text"
               placeholder="Ask about the game..."
-              className="flex-1 p-2 border rounded text-sm"
+              className="flex-1 p-2 border rounded text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
               onKeyPress={(e) => {
                 if (e.key === 'Enter' && e.target.value.trim()) {
                   handleChatMessage(e.target.value);
@@ -578,7 +661,7 @@ const BaseballBuddy = () => {
               }}
             />
             <button 
-              className="p-2 bg-blue-600 text-white rounded hover:bg-blue-700"
+              className="p-2 bg-blue-600 text-white rounded hover:bg-blue-700 transition-colors"
               onClick={() => {
                 const input = document.querySelector('input[placeholder="Ask about the game..."]');
                 if (input && input.value.trim()) {
@@ -593,29 +676,7 @@ const BaseballBuddy = () => {
         </div>
       </div>
 
-      {/* Personality Mode Section */}
-      <div className="bg-white rounded-lg shadow-lg p-4 personality-modes">
-        <h2 className="font-bold text-lg mb-4">Commentary Style</h2>
-        <div className="flex flex-col space-y-2">
-          {personalityModes.map(mode => (
-            <button
-              key={mode.id}
-              className={`p-2 rounded-lg flex items-center ${
-                selectedMode === mode.id 
-                  ? 'bg-blue-100 text-blue-700 border-2 border-blue-500'
-                  : 'bg-gray-50 hover:bg-gray-100'
-              }`}
-              onClick={() => setSelectedMode(mode.id)}
-            >
-              <Brain className="w-5 h-5 mr-2" />
-              <div className="text-left">
-                <div className="font-medium">{mode.name}</div>
-                <div className="text-sm text-gray-500">{mode.description}</div>
-              </div>
-            </button>
-          ))}
-        </div>
-      </div>
+      
     </div>
   );
 
