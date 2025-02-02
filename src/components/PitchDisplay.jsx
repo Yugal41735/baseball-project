@@ -6,6 +6,8 @@ const PitchDisplay = ({ lastPitch, gameState }) => {
   const [pitchAnimation, setPitchAnimation] = useState(false);
   const [tooltip, setTooltip] = useState({ visible: false, x: 0, y: 0 });
 
+  console.log(tooltip);
+
   useEffect(() => {
     if (lastPitch) {
       setPitchAnimation(true);
