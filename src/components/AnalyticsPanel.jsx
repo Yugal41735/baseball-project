@@ -1,105 +1,10 @@
 import React from 'react';
 import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer} from 'recharts';
-import { Image, Trophy, X, LineChart, TrendingUp, Activity, BarChart2 } from 'lucide-react';
+import { Trophy, X, LineChart, TrendingUp, Activity, BarChart2 } from 'lucide-react';
 
 const AnalyticsPanel = ({ gameData, gameStatus }) => {
   console.log("Game Status Analytics Panel: ", gameStatus);
   console.log("Game Data Analytics Panel: ", gameData);
-  // const renderWinProbabilityChart = (data) => (
-  //   <div className="h-64">
-  //     <ResponsiveContainer width="100%" height="100%">
-  //       <AreaChart data={data}>
-  //         <defs>
-  //           <linearGradient id="winProbGradient" x1="0" y1="0" x2="0" y2="1">
-  //             <stop offset="5%" stopColor="#3b82f6" stopOpacity={0.8} />
-  //             <stop offset="95%" stopColor="#3b82f6" stopOpacity={0.1} />
-  //           </linearGradient>
-  //         </defs>
-  //         <CartesianGrid strokeDasharray="3 3" className="opacity-50" />
-  //         <XAxis 
-  //           dataKey="inning" 
-  //           tick={{ fill: '#6b7280' }}
-  //         />
-  //         <YAxis 
-  //           domain={[0, 100]} 
-  //           tick={{ fill: '#6b7280' }}
-  //           label={{ value: 'Win Probability (%)', angle: -90, position: 'insideLeft', fill: '#6b7280' }}
-  //         />
-  //         <Tooltip 
-  //           contentStyle={{ 
-  //             backgroundColor: 'rgba(255, 255, 255, 0.95)',
-  //             border: 'none',
-  //             borderRadius: '0.375rem',
-  //             boxShadow: '0 2px 4px rgba(0,0,0,0.1)'
-  //           }}
-  //         />
-  //         <Legend content={() => (
-  //           <div className="flex justify-center items-center mt-2">
-  //             <span className="text-sm text-gray-600">Win Probability Over Time</span>
-  //           </div>
-  //         )} />
-  //         <Area
-  //           type="monotone"
-  //           dataKey="probability"
-  //           stroke="#3b82f6"
-  //           fill="url(#winProbGradient)"
-  //           strokeWidth={2}
-  //         />
-  //       </AreaChart>
-  //     </ResponsiveContainer>
-  //   </div>
-  // );
-
-  // const renderWinProbabilityChart = (data) => (
-  //   <div className="h-64">
-  //     <ResponsiveContainer width="100%" height="100%">
-  //       <AreaChart data={data}>
-  //         <defs>
-  //           <linearGradient id="winProbGradient" x1="0" y1="0" x2="0" y2="1">
-  //             <stop offset="5%" stopColor="#3b82f6" stopOpacity={0.8} />
-  //             <stop offset="95%" stopColor="#3b82f6" stopOpacity={0.1} />
-  //           </linearGradient>
-  //         </defs>
-  //         <CartesianGrid strokeDasharray="3 3" className="opacity-50" />
-  //         <XAxis 
-  //           dataKey="inning" 
-  //           tick={{ fill: '#6b7280' }}
-  //         />
-  //         <YAxis 
-  //           domain={[0, 100]} 
-  //           tick={{ fill: '#6b7280' }}
-  //           tickFormatter={(value) => `${value}%`}  // Add % sign to Y-axis
-  //         />
-  //         <Tooltip 
-  //           contentStyle={{ 
-  //             backgroundColor: 'rgba(255, 255, 255, 0.95)',
-  //             border: 'none',
-  //             borderRadius: '0.375rem',
-  //             boxShadow: '0 2px 4px rgba(0,0,0,0.1)'
-  //           }}
-  //           formatter={(value) => [`${value.toFixed(1)}%`, 'Win Probability']}  // Format tooltip values
-  //           labelFormatter={(label) => `Inning: ${label}`}
-  //         />
-  //         <Legend content={() => (
-  //           <div className="flex justify-center items-center gap-4 mt-2">
-  //             <div className="flex items-center gap-2">
-  //               <div className="w-3 h-3 bg-blue-500 rounded" />
-  //               <span className="text-sm text-gray-600">{gameData?.teamStats?.away?.name} Win Probability</span>
-  //             </div>
-  //           </div>
-  //         )} />
-  //         <Area
-  //           type="monotone"
-  //           dataKey="probability"
-  //           name={gameData?.teamStats?.away?.name}  // Add team name
-  //           stroke="#3b82f6"
-  //           fill="url(#winProbGradient)"
-  //           strokeWidth={2}
-  //         />
-  //       </AreaChart>
-  //     </ResponsiveContainer>
-  //   </div>
-  // );
 
   const transformedData = gameData?.winProbability?.map(point => ({
     ...point,
@@ -265,22 +170,7 @@ const AnalyticsPanel = ({ gameData, gameStatus }) => {
   const renderHistoricalStats = () => (
     <div className="space-y-6">
       {/* Win Probability Chart */}
-      {/* <div className="bg-white p-6 rounded-lg shadow-md">
-        <div className="flex items-center justify-between mb-4">
-          <h3 className="font-bold text-lg">Win Probability</h3>
-          <div className="flex items-center gap-4">
-            <div className="flex items-center gap-2">
-              <Image className="w-6 h-6" />
-              <span className="text-sm font-medium">{gameData?.awayTeam?.name}</span>
-            </div>
-            <div className="flex items-center gap-2">
-              <Image className="w-6 h-6" />
-              <span className="text-sm font-medium">{gameData?.homeTeam?.name}</span>
-            </div>
-          </div>
-        </div>
-        {renderWinProbabilityChart(gameData?.winProbability)}
-      </div> */}
+      
       <div className="bg-white p-6 rounded-lg shadow-md">
         <div className="flex items-center justify-between mb-4">
           <h3 className="font-bold text-lg">Win Probability</h3>
@@ -299,11 +189,9 @@ const AnalyticsPanel = ({ gameData, gameStatus }) => {
                 alt={gameData?.teamStats?.away?.name}
                 className="w-12 h-12"
               />
-              {/* <span className="ml-2 font-bold text-sm">{gameData?.teamStats?.away?.name}</span> */}
             </div>
             <h3 className="font-bold text-lg">Team Stats</h3>
             <div className="flex items-center justify-end w-32">
-              {/* <span className="mr-2 font-bold text-sm">{gameData?.teamStats?.home?.name}</span> */}
               <img 
                 src={`https://www.mlbstatic.com/team-logos/${gameData?.headToHead.homeTeamId}.svg`}
                 alt={gameData?.teamStats?.home?.name}
@@ -430,14 +318,22 @@ const AnalyticsPanel = ({ gameData, gameStatus }) => {
             >
               <div className="flex items-center gap-4">
                 <div className="flex items-center gap-2">
-                  <Image className="w-6 h-6" />
+                  <img 
+                    src={`https://www.mlbstatic.com/team-logos/${gameData?.headToHead.awayTeamId}.svg`}
+                    alt={gameData?.teamStats?.away?.name}
+                    className="w-12 h-12"
+                  />
                   <span className={`text-sm ${game.winner === 'away' ? 'font-bold' : ''}`}>
                     {game.awayTeam.score}
                   </span>
                 </div>
                 <span className="text-gray-500">vs</span>
                 <div className="flex items-center gap-2">
-                  <Image className="w-6 h-6" />
+                  <img 
+                    src={`https://www.mlbstatic.com/team-logos/${gameData?.headToHead.homeTeamId}.svg`}
+                    alt={gameData?.teamStats?.away?.name}
+                    className="w-12 h-12"
+                  />
                   <span className={`text-sm ${game.winner === 'home' ? 'font-bold' : ''}`}>
                     {game.homeTeam.score}
                   </span>
@@ -467,7 +363,11 @@ const AnalyticsPanel = ({ gameData, gameStatus }) => {
                 }}
               />
               <div className="absolute inset-2 bg-white rounded-full flex items-center justify-center">
-                <Image className="w-12 h-12" />
+                <img 
+                  src={`https://www.mlbstatic.com/team-logos/${gameData?.headToHead.awayTeamId}.svg`}
+                  alt={gameData?.teamStats?.away?.name}
+                  className="w-12 h-12"
+                />
               </div>
             </div>
             <div>
@@ -486,7 +386,11 @@ const AnalyticsPanel = ({ gameData, gameStatus }) => {
                 }}
               />
               <div className="absolute inset-2 bg-white rounded-full flex items-center justify-center">
-                <Image className="w-12 h-12" />
+                <img 
+                  src={`https://www.mlbstatic.com/team-logos/${gameData?.headToHead.homeTeamId}.svg`}
+                  alt={gameData?.teamStats?.away?.name}
+                  className="w-12 h-12"
+                />
               </div>
             </div>
             <div>
