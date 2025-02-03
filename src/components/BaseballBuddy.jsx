@@ -1,5 +1,5 @@
-import React, { useState, useEffect, useRef } from 'react';
-import { Video, Brain, PlayCircle, PauseCircle, Book, Calendar, Send, ChartBar, MessageCircle, RefreshCw, ThumbsUp, ThumbsDown, X } from 'lucide-react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
+import { Video, Brain, PlayCircle, PauseCircle, Book, Calendar, Send, ChartBar, MessageCircle, RefreshCw, ThumbsUp, ThumbsDown, X, User, Trophy, Medal, Crown } from 'lucide-react';
 import CommentaryGenerator from '../services/commentaryGenerator';
 import BaseballField from './BaseballField';
 import PitchDisplay from './PitchDisplay';
@@ -14,7 +14,7 @@ import GuidedTour from './GuidedTour';
 import CompletionModal from './CompletionModal';
 import VictoryAnimation from './VictoryAnimation';
 
-const BaseballBuddy = () => {
+const BaseballBuddy = ({user}) => {
   const [commentaryGen] = useState(new CommentaryGenerator());
   const [gameState, setGameState] = useState(null);
   const [isPlaying, setIsPlaying] = useState(false);
@@ -51,6 +51,20 @@ const BaseballBuddy = () => {
   const [messageRatings, setMessageRatings] = useState({});
   const [isChatOpen, setIsChatOpen] = useState(false);
 
+  const [predictions, setPredictions] = useState([]);
+  const [userProfile, setUserProfile] = useState({
+    id: user?.id,
+    name: user?.name,
+    favoriteTeam: null,
+    points: 0,
+    badges: [],
+    predictions: []
+  });
+  const [showLeaderboard, setShowLeaderboard] = useState(false);
+  const [leaderboardData, setLeaderboardData] = useState([]);
+  const [showNotification, setShowNotification] = useState(true);
+  
+
   const views = [
     {
       id: 'game',
@@ -69,6 +83,12 @@ const BaseballBuddy = () => {
       label: 'AI Companion',
       icon: MessageCircle,
       description: 'Get AI commentary and ask questions'
+    },
+    {
+      id: 'predictions',
+      label: 'Predict',
+      icon: Trophy,
+      description: 'Make predictions and earn points'
     }
   ];
   
@@ -88,10 +108,277 @@ const BaseballBuddy = () => {
     { text: "Pitching stats?", category: "stats" }
   ];
 
-  // Auto-scroll chat to bottom
-  // const scrollToBottom = () => {
-  //   messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
-  // };
+  
+
+  const handlePrediction = (type, prediction) => {
+    setPredictions(prev => [...prev, {
+      id: Date.now(),
+      type,
+      prediction,
+      gameId: selectedGameId,
+      timestamp: new Date(),
+      status: 'pending'
+    }]);
+
+    // Add visual feedback
+    const input = document.querySelector('input[type="number"]');
+    if (input) input.value = ''; // Clear input after prediction
+    
+    // Show some feedback to user
+    setUserProfile(prev => ({
+      ...prev,
+      predictions: prev.predictions + 1  // Track number of predictions made
+    }));
+    
+  };
+  
+
+  const checkPredictions = useCallback((gameState) => {
+    const checkNewBadges = (points) => {
+      const badges = [...userProfile.badges];
+      if (points >= 100 && !badges.includes('rookie')) {
+        badges.push('rookie');
+      }
+      if (points >= 500 && !badges.includes('pro')) {
+        badges.push('pro');
+      }
+      return badges;
+    };
+    predictions.forEach(prediction => {
+      if (prediction.status === 'pending') {
+        let isCorrect = false;
+        switch (prediction.type) {
+          case 'winner':
+            isCorrect = gameState.winner && gameState.winner.name === prediction.prediction;
+            break;
+          case 'mvp':
+            isCorrect = gameState.mvp && gameState.mvp.name === prediction.prediction;
+            break;
+          case 'scoreline':
+            isCorrect = gameState.scoreline === prediction.prediction;
+            break;
+          default:
+            break;
+        }
+        
+        if (isCorrect) {
+          setUserProfile(prev => ({
+            ...prev,
+            points: prev.points + 10,
+            badges: checkNewBadges(prev.points + 10)
+          }));
+  
+          const pointsEarned = 10;
+  
+          setLeaderboardData(prev => {
+            const existingUserIndex = prev.findIndex(item => item.id === user.id);
+            if (existingUserIndex !== -1) {
+              const updatedData = [...prev];
+              updatedData[existingUserIndex].points += pointsEarned;
+              return updatedData.sort((a, b) => b.points - a.points);
+            } else {
+              return [...prev, {
+                id: user.id,
+                name: user.displayName,
+                points: pointsEarned,
+                predictions: 1
+              }].sort((a, b) => b.points - a.points);
+            }
+          });
+        }
+      }
+    });
+  }, [predictions, user, setLeaderboardData, setUserProfile, userProfile.badges]);
+
+  const Leaderboard = ({ data, currentUserId }) => {
+    return (
+      <div className="bg-white rounded-lg shadow-lg p-4">
+        <div className="flex justify-between items-center mb-4">
+          <h2 className="font-bold text-lg">Prediction Leaders</h2>
+          <Trophy className="w-5 h-5 text-yellow-500" />
+        </div>
+        <div className="space-y-2">
+          {data.slice(0, 10).map((user, index) => (
+            <div 
+              key={user.id}
+              className={`flex items-center justify-between p-3 rounded-lg ${
+                user.id === currentUserId ? 'bg-blue-50' : 'hover:bg-gray-50'
+              }`}
+            >
+              <div className="flex items-center gap-3">
+                <span className={`font-bold ${
+                  index === 0 ? 'text-yellow-500' :
+                  index === 1 ? 'text-gray-400' :
+                  index === 2 ? 'text-amber-600' :
+                  'text-gray-500'
+                }`}>
+                  #{index + 1}
+                </span>
+                <span className="font-medium">{user.name}</span>
+              </div>
+              <div className="flex items-center gap-2">
+                <span className="font-bold">{user.points}</span>
+                <span className="text-sm text-gray-500">pts</span>
+                {index === 0 && <Crown className="w-4 h-4 text-yellow-500" />}
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+    );
+  };
+
+  
+
+
+  
+
+  const renderPredictionsView = () => (
+    <div className="space-y-4">
+      {/* Upper achievements and stats (already populated by renderUserAchievements) */}
+      {renderUserAchievements()}
+  
+      <div className="bg-white rounded-lg shadow-lg p-4">
+        <div className="flex justify-between items-center mb-4">
+          <h2 className="font-bold text-lg">Make Your Predictions</h2>
+          <div className="flex items-center gap-2">
+            <Trophy className="w-5 h-5 text-yellow-500" />
+            <span className="font-bold">{userProfile.points} pts</span>
+          </div>
+        </div>
+  
+        {(!gameState || gameState.status === 'Final') ? (
+          // If there’s no game state or the game is finished, don’t allow predictions.
+          <p className="text-gray-600">
+            No predictions to do or match has already been played.
+          </p>
+        ) : (
+          <div className="space-y-4">
+            {/* Predict Winner */}
+            <div className="border rounded-lg p-4">
+              <h3 className="font-medium mb-2">Predict Winner</h3>
+              <div className="flex gap-2">
+                <button
+                  onClick={() => handlePrediction('winner', gameState.teams.away.name)}
+                  className="px-4 py-2 rounded-lg bg-blue-50 hover:bg-blue-100 text-blue-600"
+                >
+                  {gameState.teams.away.name}
+                </button>
+                <button
+                  onClick={() => handlePrediction('winner', gameState.teams.home.name)}
+                  className="px-4 py-2 rounded-lg bg-blue-50 hover:bg-blue-100 text-blue-600"
+                >
+                  {gameState.teams.home.name}
+                </button>
+              </div>
+            </div>
+  
+            {/* Predict MVP */}
+            <div className="border rounded-lg p-4">
+              <h3 className="font-medium mb-2">Predict MVP</h3>
+              <div className="flex gap-4">
+                <input
+                  type="text"
+                  className="border rounded px-2 py-1 w-full"
+                  placeholder="Enter MVP's name"
+                  id="mvpPrediction"
+                />
+                <button
+                  onClick={() => {
+                    const input = document.getElementById('mvpPrediction');
+                    if (input && input.value.trim()) {
+                      handlePrediction('mvp', input.value.trim());
+                      input.value = '';
+                    }
+                  }}
+                  className="px-4 py-2 rounded-lg bg-blue-600 text-white hover:bg-blue-700"
+                >
+                  Predict
+                </button>
+              </div>
+            </div>
+  
+            {/* Predict Scoreline */}
+            <div className="border rounded-lg p-4">
+              <h3 className="font-medium mb-2">Predict Scoreline</h3>
+              <div className="flex gap-4">
+                <input
+                  type="text"
+                  className="border rounded px-2 py-1 w-full"
+                  placeholder="e.g., 5-3"
+                  id="scorelinePrediction"
+                />
+                <button
+                  onClick={() => {
+                    const input = document.getElementById('scorelinePrediction');
+                    if (input && input.value.trim()) {
+                      handlePrediction('scoreline', input.value.trim());
+                      input.value = '';
+                    }
+                  }}
+                  className="px-4 py-2 rounded-lg bg-blue-600 text-white hover:bg-blue-700"
+                >
+                  Predict
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
+      </div>
+
+      <div className="bg-white rounded-lg shadow-lg p-4">
+        <div className="flex justify-between items-center mb-4">
+          <h2 className="font-bold text-lg">Top Predictors</h2>
+          <Medal className="w-5 h-5 text-yellow-500" />
+        </div>
+        <div className="space-y-2">
+          {leaderboardData.map((user, index) => (
+            <div key={user.id} className="flex items-center justify-between p-2 hover:bg-gray-50 rounded">
+              <div className="flex items-center gap-2">
+                <span className={`font-bold ${index === 0 ? 'text-yellow-500' : 'text-gray-500'}`}>
+                  #{index + 1}
+                </span>
+                <User className="w-4 h-4" />
+                <span>{user.name}</span>
+              </div>
+              <div className="flex items-center gap-2">
+                <span className="font-bold">{user.points}</span>
+                <Trophy className="w-4 h-4 text-yellow-500" />
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+        
+      {/* Toggle Leaderboard button */}
+      <button
+        onClick={() => setShowLeaderboard(prev => !prev)}
+        className="fixed bottom-4 right-4 bg-blue-600 text-white p-3 rounded-full shadow-lg hover:bg-blue-700 transition-colors"
+      >
+        <Trophy className="w-6 h-6" />
+      </button>
+  
+      {/* Leaderboard Modal */}
+      {showLeaderboard && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div className="bg-white rounded-lg max-w-md w-full m-4">
+            <div className="p-4">
+              <Leaderboard data={leaderboardData} currentUserId={user?.id} />
+            </div>
+            <div className="border-t p-4 flex justify-end">
+              <button
+                onClick={() => setShowLeaderboard(false)}
+                className="px-4 py-2 bg-gray-100 rounded-lg hover:bg-gray-200"
+              >
+                Close
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+
 
   useEffect(() => {
     const visited = localStorage.getItem('hasVisited');
@@ -104,10 +391,102 @@ const BaseballBuddy = () => {
     // If visited is 'true', do nothing; user won't see the welcome again
   }, []);
 
+  useEffect(() => {
+    setLeaderboardData([
+      { id: 1, name: "John Doe", points: 100, predictions: 15 },
+      { id: 2, name: "Jane Smith", points: 85, predictions: 12 },
+      { id: 3, name: "Mike Johnson", points: 70, predictions: 10 },
+      { id: 4, name: "Sarah Wilson", points: 65, predictions: 8 },
+      { id: 5, name: "Tom Brown", points: 50, predictions: 6 }
+    ]);
+  }, []);
+
   const handlePlaySelect = (play) => {
     setAnalyzingPlay(play);
     setActiveView('analysis');  // Auto-switch to analysis view
   };
+
+  useEffect(() => {
+    if (gameState) {
+      checkPredictions(gameState);
+    }
+  }, [gameState, checkPredictions]);
+
+  const [userAchievements, setUserAchievements] = useState({
+    points: 75,
+    badges: [
+      { id: 1, name: 'Rookie Predictor', icon: '🎯', description: 'Made your first prediction', earned: '2024-02-01' },
+      { id: 2, name: 'Hot Streak', icon: '🔥', description: '5 correct predictions in a row', earned: '2024-02-15' },
+      { id: 3, name: 'Expert Analyst', icon: '📊', description: 'Reached 50 points', earned: '2024-02-20' },
+    ],
+    recentPredictions: [
+      { id: 1, type: 'Winner', prediction: 'Yankees', result: 'correct', points: 10, date: '2024-02-25' },
+      { id: 2, type: 'Score', prediction: '5-3', result: 'incorrect', points: 0, date: '2024-02-24' },
+      { id: 3, type: 'MVP', prediction: 'Judge', result: 'pending', points: null, date: '2024-02-23' }
+    ]
+  });
+  
+  // Add this section to your renderPredictionsView
+  const renderUserAchievements = () => (
+    <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+      {/* User Stats Card */}
+      <div className="bg-white rounded-lg shadow-lg p-6">
+        <div className="flex justify-between items-center mb-4">
+          <h3 className="font-bold text-lg">Your Stats</h3>
+          <div className="flex items-center gap-2">
+            <Trophy className="w-5 h-5 text-yellow-500" />
+            <span className="font-bold text-xl">{userAchievements.points}</span>
+          </div>
+        </div>
+        <div className="flex flex-wrap gap-3">
+          {userAchievements.badges.map(badge => (
+            <div 
+              key={badge.id}
+              className="flex items-center gap-2 bg-blue-50 p-2 rounded-lg"
+            >
+              <span className="text-2xl">{badge.icon}</span>
+              <div>
+                <div className="font-medium text-sm">{badge.name}</div>
+                <div className="text-xs text-gray-500">{new Date(badge.earned).toLocaleDateString()}</div>
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+  
+      {/* Recent Predictions Card */}
+      <div className="bg-white rounded-lg shadow-lg p-6">
+        <h3 className="font-bold text-lg mb-4">Recent Predictions</h3>
+        <div className="space-y-3">
+          {userAchievements.recentPredictions.map(prediction => (
+            <div 
+              key={prediction.id}
+              className="flex justify-between items-center p-2 rounded-lg bg-gray-50"
+            >
+              <div>
+                <div className="font-medium">{prediction.type}</div>
+                <div className="text-sm text-gray-500">{prediction.prediction}</div>
+              </div>
+              <div className="flex items-center gap-2">
+                {prediction.result === 'correct' && (
+                  <span className="text-green-500">✓</span>
+                )}
+                {prediction.result === 'incorrect' && (
+                  <span className="text-red-500">✗</span>
+                )}
+                {prediction.result === 'pending' && (
+                  <span className="text-yellow-500">⋯</span>
+                )}
+                <span className="text-sm">
+                  {prediction.result === 'pending' ? 'Pending' : `${prediction.points} pts`}
+                </span>
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+    </div>
+  );
 
   
 
@@ -127,10 +506,6 @@ const BaseballBuddy = () => {
     // First check the game status
     console.log("Game selected:", gameId);
     const gameData = await mlbService.getLiveGameData(gameId);
-    // console.log("Game status:", gameData.status);
-    // console.log("Game state:", gameData.gameState);
-    // const analytics = await mlbService.getGameAnalytics(gameId);
-    // setGameAnalytics(analytics);
     console.log("Game Data: ",gameData.gameData);
 
     if (gameData.gameState) {
@@ -147,16 +522,6 @@ const BaseballBuddy = () => {
     if (gameData.status === 'Final') {
         // Load historical game data
         const historicalData = await mlbService.loadHistoricalGame(gameId);
-        // const homeScore = gameData.gameState?.score?.home || 0;
-        // const awayScore = gameData.gameState?.score?.away || 0;
-        // const winningTeamName = homeScore > awayScore ? 
-        // gameData.gameState?.teams?.home?.name : 
-        // gameData.gameState?.teams?.away?.name;
-
-        // Extract colors for winning team
-        // console.log("Winning Team: ", winningTeamName);
-        // const colors = await commentaryGen.extractTeamColors(winningTeamName);
-        // console.log('Winning team colors:', colors);
 
         if (historicalData.status === 'loaded') {
             setSimulationState(prev => ({
@@ -205,12 +570,6 @@ const BaseballBuddy = () => {
             currentPlayIndex: 0
         }));
         
-        // Set initial game state for live game
-        // if (gameData.gameState) {
-        //   setGameState(gameData.gameState);
-        //   const analytics = await mlbService.getGameAnalytics(gameId);
-        //   setGameAnalytics(analytics);
-        // }
     }
   };
 
@@ -218,9 +577,8 @@ const BaseballBuddy = () => {
     setIsGameSelectorVisible(false);
   };
 
-  // useEffect(() => {
-  //   scrollToBottom();
-  // }, [messages]);
+  console.log(setUserAchievements);
+
 
   // Update this useEffect in BaseballBuddy.jsx
   useEffect(() => {
@@ -309,17 +667,6 @@ const BaseballBuddy = () => {
       timestamp: Date.now()
     }]);
 
-    // Generate expert response based on game context
-    // let expertResponse = "I'll need to implement the expert response logic here.";
-    
-    // Add AI response
-    // setTimeout(() => {
-    //   setChatMessages(prev => [...prev, {
-    //     type: 'ai',
-    //     content: expertResponse,
-    //     timestamp: Date.now()
-    //   }]);
-    // }, 500);
 
     try {
       // Get expert response
@@ -345,10 +692,6 @@ const BaseballBuddy = () => {
     }
   };
 
-  // const getTeamColors = async (teamId) => {
-  //   const colors = await commentaryGen.extractTeamColors(teamId);
-  //   console.log(`Team ${teamId} colors:`, colors);
-  // };
 
   console.log("Hello I am game state: ",gameState);
 
@@ -357,38 +700,50 @@ const BaseballBuddy = () => {
       {/* Game Feed Section */}
       <div className="bg-white rounded-lg shadow-lg p-4">
         <div className="relative">
-          <div className="bg-gray-200 h-64 rounded flex items-center justify-center game-feed">
-            <Video className="w-12 h-12 text-gray-400" />
-            <span className="ml-2 text-gray-500">Game Feed Will Appear Here</span>
-          </div>
-          
           {/* Game Score Overlay */}
+          {!gameState && (
+            <div className="flex justify-center items-center space-x-8">
+              {/* Away Team */}
+              <div className="flex flex-col items-center">
+                <span className="text-xl font-bold">{gameState?.score?.away ?? 0}</span>
+                <span className="text-sm text-gray-600">{gameState?.teams?.away?.name || "Away"}</span>
+              </div>
+              <span className="text-2xl font-bold">-</span>
+              {/* Home Team */}
+              <div className="flex flex-col items-center">
+                <span className="text-xl font-bold">{gameState?.score?.home ?? 0}</span>
+                <span className="text-sm text-gray-600">{gameState?.teams?.home?.name || "Home"}</span>
+              </div>
+            </div>
+          )}
           {gameState && (
-            <div className="absolute top-4 left-4 bg-black bg-opacity-75 text-white p-2 rounded">
-              <div className="flex items-center gap-4">
-                <div className="flex items-center">
-                  <img 
-                    src={`https://www.mlbstatic.com/team-logos/${gameState.teams?.away?.id}.svg`}
-                    alt={gameState.teams?.away?.name}
-                    className="w-6 h-6 mr-2"
-                  />
-                  <span>{gameState.score.away}</span>
-                </div>
-                <span>-</span>
-                <div className="flex items-center">
-                  <span>{gameState.score.home}</span>
-                  <img 
-                    src={`https://www.mlbstatic.com/team-logos/${gameState.teams?.home?.id}.svg`}
-                    alt={gameState.teams?.home?.name}
-                    className="w-6 h-6 ml-2"
-                  />
-                </div>
+            <div className="flex justify-center items-center space-x-8">
+              {/* Away Team */}
+              <div className="flex flex-col items-center">
+                <img 
+                  src={`https://www.mlbstatic.com/team-logos/${gameState.teams?.away?.id}.svg`}
+                  alt={gameState.teams?.away?.name || "Away Team"}
+                  className="w-12 h-12"
+                />
+                <span className="text-xl font-bold">{gameState.score?.away ?? 0}</span>
+                <span className="text-sm text-gray-600">{gameState.teams?.away?.name || "Away"}</span>
+              </div>
+              <span className="text-2xl font-bold">-</span>
+              {/* Home Team */}
+              <div className="flex flex-col items-center">
+                <img 
+                  src={`https://www.mlbstatic.com/team-logos/${gameState.teams?.home?.id}.svg`}
+                  alt={gameState.teams?.home?.name || "Home Team"}
+                  className="w-12 h-12"
+                />
+                <span className="text-xl font-bold">{gameState.score?.home ?? 0}</span>
+                <span className="text-sm text-gray-600">{gameState.teams?.home?.name || "Home"}</span>
               </div>
             </div>
           )}
           
           {/* Playback Controls */}
-          <div className="absolute bottom-4 left-1/2 transform -translate-x-1/2">
+          <div className="mt-4 flex flex-col items-center">
             <button 
               className="p-2 bg-white rounded-full shadow-lg hover:bg-gray-100"
               onClick={() => setIsPlaying(!isPlaying)}
@@ -711,6 +1066,34 @@ const BaseballBuddy = () => {
     </div>
   );
 
+  // Add this component for a subtle notification
+const GameSelectionNotification = () => (
+  <div className="fixed bottom-20 left-1/2 -translate-x-1/2 z-40 bg-white rounded-lg shadow-lg p-4 border border-blue-100 animate-fade-in">
+    <div className="flex items-center gap-3">
+      <div className="bg-blue-50 p-2 rounded-full">
+        <Calendar className="w-5 h-5 text-blue-500" />
+      </div>
+      <div>
+        <p className="text-sm text-gray-600">
+          Select a game to get the full experience
+        </p>
+        <button
+          onClick={() => setIsGameSelectorVisible(true)}
+          className="text-blue-600 text-sm font-medium hover:text-blue-700"
+        >
+          Choose a game →
+        </button>
+      </div>
+      <button 
+        onClick={() => setShowNotification(false)} 
+        className="text-gray-400 hover:text-gray-500"
+      >
+        <X className="w-4 h-4" />
+      </button>
+    </div>
+  </div>
+);
+
 
 
   return (
@@ -790,9 +1173,11 @@ const BaseballBuddy = () => {
 
         {/* Main Content */}
         <div className="flex-1 p-4 overflow-y-auto">
+          {!selectedGameId && showNotification && <GameSelectionNotification />}
           {activeView === 'game' && renderGameView()}
           {activeView === 'analysis' && renderAnalysisView()}
           {activeView === 'companion' && renderCompanionView()}
+          {activeView === 'predictions' && renderPredictionsView()}
         </div>
         <FloatingExpertChat />
       </div>
