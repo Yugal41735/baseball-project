@@ -1,6 +1,5 @@
 import React, { useState, useEffect } from 'react';
 import BaseballBuddy from './components/BaseballBuddy';
-import BaseballBuddyV2 from './components/BaseballBuddyV2';
 import LandingPage from './components/LandingPage';
 import { initializeApp } from 'firebase/app';
 import { getAuth, onAuthStateChanged } from 'firebase/auth';
@@ -16,14 +15,13 @@ const firebaseConfig = {
   appId: process.env.REACT_APP_FIREBASE_APP_ID
 };
 
-console.log('Firebase Config:', firebaseConfig);
+// console.log('Firebase Config:', firebaseConfig);
 
 // Initialize Firebase
 const app = initializeApp(firebaseConfig);
 const auth = getAuth(app);
 
 function App() {
-  const [viewVersion, setViewVersion] = useState('v1');
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
 
@@ -67,18 +65,9 @@ function App() {
         >
           Sign Out
         </button>
-        <button 
-          onClick={() => setViewVersion(viewVersion === 'v1' ? 'v2' : 'v1')}
-          className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700"
-        >
-          Switch to {viewVersion === 'v1' ? 'V2' : 'V1'}
-        </button>
       </div>
 
-      {viewVersion === 'v1' ? 
-        <BaseballBuddy user={user} /> : 
-        <BaseballBuddyV2 user={user} />
-      }
+      <BaseballBuddy user={user} />
     </div>
   );
 }
