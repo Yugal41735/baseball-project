@@ -27,7 +27,7 @@ const TOUR_STEPS = [
     {
       target: '.game-info',
       title: 'Current Game Status',
-      content: 'See the current score, inning, and game situation at a glance.',
+      content: 'See the inning, and game situation at a glance.',
       position: 'right',
       view: 'game'
     },
@@ -83,6 +83,15 @@ const TOUR_STEPS = [
       content: 'Choose your preferred commentary style - from casual fan to stats expert.',
       position: 'left',
       view: 'companion'
+    },
+    // Predictions View
+    {
+      target: '[data-view="predictions"]',
+      title: 'Make Predictions',
+      content: "Make predictions about the game and earn points!",
+      position: 'right',
+      view: 'predictions',
+      isTransition: true
     },
     {
       target: '.baseball-expert',

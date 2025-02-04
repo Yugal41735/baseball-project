@@ -13,6 +13,7 @@ import WelcomeModal from './WelcomeModal';
 import GuidedTour from './GuidedTour';
 import CompletionModal from './CompletionModal';
 import VictoryAnimation from './VictoryAnimation';
+import PlayerComparison from './PlayerComparision';
 
 const BaseballBuddy = ({user}) => {
   const [commentaryGen] = useState(new CommentaryGenerator());
@@ -698,7 +699,7 @@ const BaseballBuddy = ({user}) => {
   const renderGameView = () => (
     <div className="space-y-4">
       {/* Game Feed Section */}
-      <div className="bg-white rounded-lg shadow-lg p-4">
+      <div className="bg-white rounded-lg shadow-lg p-4 game-feed">
         <div className="relative">
           {/* Game Score Overlay */}
           {!gameState && (
@@ -835,6 +836,153 @@ const BaseballBuddy = ({user}) => {
     </div>
   );
 
+
+  // // First, add a new component for player comparison
+  // const PlayerComparison = ({ gameState }) => {
+  //   const [selectedPlayers, setSelectedPlayers] = useState({
+  //     player1: null,
+  //     player2: null
+  //   });
+
+  //   // Get all players from both teams
+  //   const getAllPlayers = () => {
+  //     if (!gameState?.teams) return [];
+      
+  //     const homePlayers = {`https://statsapi.mlb.com/api/v1/teams/{gameState.teams.home?.id}/roster?season=2025`} || [];
+  //     const awayPlayers = gameState.teams.away?.players || [];
+      
+  //     return [...homePlayers, ...awayPlayers].map(player => ({
+  //       id: player.id,
+  //       name: player.fullName,
+  //       team: player.team,
+  //       stats: player.stats,
+  //       position: player.position
+  //     }));
+  //   };
+
+  //   const compareStats = (stat1, stat2) => {
+  //     return stat1 > stat2 ? 'text-green-600' : stat1 < stat2 ? 'text-red-600' : 'text-gray-600';
+  //   };
+
+  //   return (
+  //     <div className="bg-white rounded-lg shadow-lg p-6">
+  //       <h2 className="text-xl font-bold mb-4 flex items-center gap-2">
+  //         <Users className="w-5 h-5 text-blue-500" />
+  //         Player Comparison
+  //       </h2>
+
+  //       {/* Player Selection */}
+  //       <div className="grid grid-cols-2 gap-6 mb-6">
+  //         {['player1', 'player2'].map(playerKey => (
+  //           <div key={playerKey}>
+  //             <select
+  //               className="w-full p-2 border rounded-lg"
+  //               onChange={(e) => setSelectedPlayers(prev => ({
+  //                 ...prev,
+  //                 [playerKey]: getAllPlayers().find(p => p.id === e.target.value)
+  //               }))}
+  //               value={selectedPlayers[playerKey]?.id || ''}
+  //             >
+  //               <option value="">Select Player</option>
+  //               {getAllPlayers().map(player => (
+  //                 <option key={player.id} value={player.id}>
+  //                   {player.name} ({player.team})
+  //                 </option>
+  //               ))}
+  //             </select>
+  //           </div>
+  //         ))}
+  //       </div>
+
+  //       {/* Stats Comparison */}
+  //       {selectedPlayers.player1 && selectedPlayers.player2 && (
+  //         <div className="space-y-4">
+  //           {/* Player Info */}
+  //           <div className="grid grid-cols-2 gap-6">
+  //             {[selectedPlayers.player1, selectedPlayers.player2].map((player, index) => (
+  //               <div key={index} className="text-center">
+  //                 <img
+  //                   src={`https://securea.mlb.com/mlb/images/players/head_shot/${player.id}.jpg`}
+  //                   alt={player.name}
+  //                   className="w-24 h-24 rounded-full mx-auto mb-2 border-2 border-gray-200"
+  //                   onError={(e) => {
+  //                     e.target.src = '/placeholder-player.png'
+  //                   }}
+  //                 />
+  //                 <div className="font-bold">{player.name}</div>
+  //                 <div className="text-sm text-gray-600">{player.position}</div>
+  //               </div>
+  //             ))}
+  //           </div>
+
+  //           {/* Stats Grid */}
+  //           <div className="border rounded-lg overflow-hidden">
+  //             {/* Batting Stats */}
+  //             <div className="bg-gray-50 p-3 font-medium">Batting Stats</div>
+  //             <div className="divide-y">
+  //               {[
+  //                 { label: 'AVG', key: 'avg' },
+  //                 { label: 'HR', key: 'homeRuns' },
+  //                 { label: 'RBI', key: 'rbi' },
+  //                 { label: 'OPS', key: 'ops' },
+  //                 { label: 'SB', key: 'stolenBases' }
+  //               ].map(stat => (
+  //                 <div key={stat.key} className="grid grid-cols-3 p-2">
+  //                   <div className="text-gray-600">{stat.label}</div>
+  //                   <div className={compareStats(
+  //                     selectedPlayers.player1.stats?.batting?.[stat.key],
+  //                     selectedPlayers.player2.stats?.batting?.[stat.key]
+  //                   )}>
+  //                     {selectedPlayers.player1.stats?.batting?.[stat.key] || '-'}
+  //                   </div>
+  //                   <div className={compareStats(
+  //                     selectedPlayers.player2.stats?.batting?.[stat.key],
+  //                     selectedPlayers.player1.stats?.batting?.[stat.key]
+  //                   )}>
+  //                     {selectedPlayers.player2.stats?.batting?.[stat.key] || '-'}
+  //                   </div>
+  //                 </div>
+  //               ))}
+  //             </div>
+
+  //             {/* Pitching Stats (if applicable) */}
+  //             {(selectedPlayers.player1.stats?.pitching || selectedPlayers.player2.stats?.pitching) && (
+  //               <>
+  //                 <div className="bg-gray-50 p-3 font-medium">Pitching Stats</div>
+  //                 <div className="divide-y">
+  //                   {[
+  //                     { label: 'ERA', key: 'era' },
+  //                     { label: 'W-L', key: 'record' },
+  //                     { label: 'K', key: 'strikeouts' },
+  //                     { label: 'WHIP', key: 'whip' },
+  //                     { label: 'IP', key: 'inningsPitched' }
+  //                   ].map(stat => (
+  //                     <div key={stat.key} className="grid grid-cols-3 p-2">
+  //                       <div className="text-gray-600">{stat.label}</div>
+  //                       <div className={compareStats(
+  //                         selectedPlayers.player1.stats?.pitching?.[stat.key],
+  //                         selectedPlayers.player2.stats?.pitching?.[stat.key]
+  //                       )}>
+  //                         {selectedPlayers.player1.stats?.pitching?.[stat.key] || '-'}
+  //                       </div>
+  //                       <div className={compareStats(
+  //                         selectedPlayers.player2.stats?.pitching?.[stat.key],
+  //                         selectedPlayers.player1.stats?.pitching?.[stat.key]
+  //                       )}>
+  //                         {selectedPlayers.player2.stats?.pitching?.[stat.key] || '-'}
+  //                       </div>
+  //                     </div>
+  //                   ))}
+  //                 </div>
+  //               </>
+  //             )}
+  //           </div>
+  //         </div>
+  //       )}
+  //     </div>
+  //   );
+  // };
+
   const renderAnalysisView = () => (
     <div className="space-y-4">
       <div className="grid grid-cols-2 gap-4">
@@ -850,6 +998,8 @@ const BaseballBuddy = ({user}) => {
           />
         </div>
       </div>
+
+      <PlayerComparison gameState={gameState} mlbService={mlbService} />
 
       {analyzingPlay && (
       <div className="bg-blue-50 p-4 rounded-lg border border-blue-200">

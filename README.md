@@ -1,70 +1,116 @@
-# Getting Started with Create React App
+# ⚾ BaseballBuddy - Your AI-Powered MLB Companion
 
-This project was bootstrapped with [Create React App](https://github.com/facebook/create-react-app).
+## 🏆 NEXT 2025 Hackathon Project
+> Making baseball more engaging and accessible through AI and real-time analytics
 
-## Available Scripts
+🔗 [Live Demo](https://baseball-buddy.netlify.app/) | [GitHub Repository](https://github.com/Yugal41735/baseball-project)
 
-In the project directory, you can run:
+## 🌟 Features
 
-### `npm start`
+### Real-Time Game Experience
+- Live game tracking with dynamic play-by-play updates
+- Interactive baseball field visualization
+- Real-time pitch tracking and analysis
+- Dynamic win probability calculations
+- Head-to-head team statistics
 
-Runs the app in the development mode.\
-Open [http://localhost:3000](http://localhost:3000) to view it in your browser.
+### AI-Powered Commentary
+- Three unique commentary styles:
+  - 🎭 Casual Fan: Easy-going, engaging explanations
+  - 📊 Stats Nerd: Deep statistical analysis
+  - 📚 History Buff: Historical context and comparisons
+- AI Expert Chat: Ask questions about anything baseball-related
 
-The page will reload when you make changes.\
-You may also see any lint errors in the console.
+### Advanced Analytics
+- Detailed pitch sequence analysis
+- Player comparison tool with comprehensive stats
+- Team performance metrics
+- Key moments identification and analysis
 
-### `npm test`
+### Interactive Features
+- Make game predictions and earn points
+- Personalized learning mode for baseball basics
+- Achievement system with badges
+- Historical game simulation
 
-Launches the test runner in the interactive watch mode.\
-See the section about [running tests](https://facebook.github.io/create-react-app/docs/running-tests) for more information.
+## 🛠️ Technology Stack
 
-### `npm run build`
+### Frontend
+- React.js with Hooks
+- Tailwind CSS for styling
+- Framer Motion for animations
+- Recharts for data visualization
+- Lucide React for icons
 
-Builds the app for production to the `build` folder.\
-It correctly bundles React in production mode and optimizes the build for the best performance.
+### Backend Integration
+- MLB Stats API integration
+- Google Generative AI (Gemini) for commentary
+- Firebase Authentication
 
-The build is minified and the filenames include the hashes.\
-Your app is ready to be deployed!
+### Key Libraries
+- React Router for navigation
+- PapaParse for data processing
+- SheetJS for Excel handling
+- Lodash for data manipulation
 
-See the section about [deployment](https://facebook.github.io/create-react-app/docs/deployment) for more information.
+## 🎯 Unique Value Proposition
 
-### `npm run eject`
+BaseballBuddy transforms the baseball viewing experience by:
+1. Making complex statistics accessible to casual fans
+2. Providing AI-powered insights in real-time
+3. Creating an interactive learning environment
+4. Offering personalized commentary styles
+5. Gamifying the experience with predictions and achievements
 
-**Note: this is a one-way operation. Once you `eject`, you can't go back!**
+## 🚀 Getting Started
 
-If you aren't satisfied with the build tool and configuration choices, you can `eject` at any time. This command will remove the single build dependency from your project.
+```bash
+# Clone the repository
+git clone https://github.com/Yugal41735/baseball-project.git
 
-Instead, it will copy all the configuration files and the transitive dependencies (webpack, Babel, ESLint, etc) right into your project so you have full control over them. All of the commands except `eject` will still work, but they will point to the copied scripts so you can tweak them. At this point you're on your own.
+# Install dependencies
+cd baseball-project
+npm install
 
-You don't have to ever use `eject`. The curated feature set is suitable for small and middle deployments, and you shouldn't feel obligated to use this feature. However we understand that this tool wouldn't be useful if you couldn't customize it when you are ready for it.
+# Set up environment variables
+REACT_APP_GEMINI_API_KEY=your_gemini_api_key
+REACT_APP_FIREBASE_CONFIG=your_firebase_config
 
-## Learn More
+# Run the development server
+npm start
+```
 
-You can learn more in the [Create React App documentation](https://facebook.github.io/create-react-app/docs/getting-started).
+## 📌 Core Components
 
-To learn React, check out the [React documentation](https://reactjs.org/).
+- `BaseballBuddy`: Main application component
+- `MLBDataService`: Handles all MLB API interactions
+- `CommentaryGenerator`: AI-powered commentary system
+- `AnalyticsPanel`: Real-time game analytics
+- `PlayerComparison`: Interactive player stats comparison
+- `PitchSequence`: Pitch-by-pitch analysis
 
-### Code Splitting
+## 🎮 User Experience
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/code-splitting](https://facebook.github.io/create-react-app/docs/code-splitting)
+1. **Authentication**: Simple Google sign-in
+2. **Game Selection**: Choose from live, upcoming, or historical games
+3. **Viewing Modes**: Switch between game view, analysis, and AI companion
+4. **Interaction**: Make predictions, earn points, and learn about baseball
+5. **Personalization**: Select preferred commentary style and track achievements
 
-### Analyzing the Bundle Size
+## 🤝 Contributing
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/analyzing-the-bundle-size](https://facebook.github.io/create-react-app/docs/analyzing-the-bundle-size)
+We welcome contributions! Please check our [Contributing Guidelines](CONTRIBUTING.md) for details.
 
-### Making a Progressive Web App
+## 📄 License
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/making-a-progressive-web-app](https://facebook.github.io/create-react-app/docs/making-a-progressive-web-app)
+This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
 
-### Advanced Configuration
+## 🙏 Acknowledgments
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/advanced-configuration](https://facebook.github.io/create-react-app/docs/advanced-configuration)
+- MLB Stats API for real-time baseball data
+- Google Generative AI for powering our AI commentary
+- All contributors and beta testers
 
-### Deployment
+---
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/deployment](https://facebook.github.io/create-react-app/docs/deployment)
-
-### `npm run build` fails to minify
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/troubleshooting#npm-run-build-fails-to-minify](https://facebook.github.io/create-react-app/docs/troubleshooting#npm-run-build-fails-to-minify)
+Made with ⚾ for the NEXT 2025 Hackathon

@@ -5,6 +5,8 @@ class MLBDataService {
     this.BASE_URL = 'https://statsapi.mlb.com/api/v1';
     this.LIVE_GAME_URL = 'https://statsapi.mlb.com/api/v1.1/game';
     this.initGameStats();
+    this.rosterCache = new Map();
+    this.statsCache = new Map();
   }
 
   initGameStats() {
@@ -262,7 +264,7 @@ class MLBDataService {
     const awayPlayer = this.currentBoxscore.teams.away.players[`ID${playerId}`];
     const player = homePlayer || awayPlayer;
 
-    // console.log("Player ",player);
+    console.log("Player Season Stats ",player);
 
     return player?.seasonStats || null;
   }
@@ -557,23 +559,23 @@ class MLBDataService {
   }
 
   // some error with find
-  getPitcherStats(gameData, teamType) {
-    const pitcher = gameData.gameData.probablePitchers[teamType];
-    const stats = this.getPlayerSeasonStats(pitcher.id).pitching;
-    console.log("stats: ", stats);
-    console.log("Pitcher Stats: ",pitcher);
-    if (!pitcher) return null;
+  // getPitcherStats(gameData, teamType) {
+  //   const pitcher = gameData.gameData.probablePitchers[teamType];
+  //   const stats = this.getPlayerSeasonStats(pitcher.id).pitching;
+  //   console.log("stats: ", stats);
+  //   console.log("Pitcher Stats: ",pitcher);
+  //   if (!pitcher) return null;
 
-    return {
-      id: pitcher.id,
-      name: pitcher.fullName,
-      era: stats.era || 0,
-      whip: stats.whip || 0,
-      record: `${stats.wins || 0}-${
-        stats.losses || 0
-      }`
-    };
-  }
+  //   return {
+  //     id: pitcher.id,
+  //     name: pitcher.fullName,
+  //     era: stats.era || 0,
+  //     whip: stats.whip || 0,
+  //     record: `${stats.wins || 0}-${
+  //       stats.losses || 0
+  //     }`
+  //   };
+  // }
 
   // async getHeadToHeadRecord(awayTeamId, homeTeamId) {
   //   console.log("Home team: ", homeTeamId);
@@ -678,6 +680,197 @@ class MLBDataService {
   //     };
   //   }
   // }
+
+  async getCachedPlayerStats(playerId) {
+    const cacheKey = `stats_${playerId}`;
+    const cachedData = this.statsCache.get(cacheKey);
+    const cacheExpiry = 5 * 60 * 1000; // 5 minutes
+  
+    if (cachedData && Date.now() - cachedData.timestamp < cacheExpiry) {
+      return cachedData.data;
+    }
+  
+    const stats = await this.getPlayerSeasonAndGameStats(playerId);
+    this.statsCache.set(cacheKey, {
+      timestamp: Date.now(),
+      data: stats
+    });
+    
+    return stats;
+  }
+
+  async getPlayerSeasonAndGameStats(playerId) {
+    try {
+      // First, get the player's season stats
+      const seasonStats = await this.fetchPlayerSeasonStats(playerId);
+      
+      // If we have currentBoxscore (game in progress), merge with current game stats
+      let gameStats = null;
+      if (this.currentBoxscore) {
+        const homePlayer = this.currentBoxscore.teams.home.players[`ID${playerId}`];
+        const awayPlayer = this.currentBoxscore.teams.away.players[`ID${playerId}`];
+        gameStats = homePlayer?.stats || awayPlayer?.stats;
+      }
+  
+      return {
+        ...seasonStats,
+        gameStats: gameStats
+      };
+    } catch (error) {
+      console.error('Error fetching player stats:', error);
+      return null;
+    }
+  }
+  
+  async fetchPlayerSeasonStats(playerId) {
+    try {
+      const hittingUrl = `${this.BASE_URL}/people/${playerId}?hydrate=stats(type=season,season=2024,group=hitting)`;
+      const pitchingUrl = `${this.BASE_URL}/people/${playerId}?hydrate=stats(type=season,season=2024,group=pitching)`;
+      let response = await fetch(hittingUrl);
+      let data = await response.json();
+
+      console.log("Player stats of year: ",data)
+  
+      // Process hitting stats
+      const hittingStats = data.people[0].stats?.[0].splits[0].stat || {};
+      response = await fetch(pitchingUrl);
+      data = await response.json();
+      const pitchingStats = data.people[0].stats?.[0].splits[0].stat || {};
+
+      console.log("Hitting stats: ", hittingStats);
+      console.log("Pitching stats: ", pitchingStats);
+  
+      return {
+        batting: {
+          avg: hittingStats.avg || '.000',
+          homeRuns: hittingStats.homeRuns || 0,
+          rbi: hittingStats.rbi || 0,
+          ops: hittingStats.ops || '.000',
+          stolenBases: hittingStats.stolenBases || 0,
+          hits: hittingStats.hits || 0,
+          atBats: hittingStats.atBats || 0
+        },
+        pitching: {
+          era: pitchingStats.era || '0.00',
+          wins: pitchingStats.wins || 0,
+          losses: pitchingStats.losses || 0,
+          strikeouts: pitchingStats.strikeOuts || 0,
+          whip: pitchingStats.whip || '0.00',
+          inningsPitched: pitchingStats.inningsPitched || '0.0',
+          record: `${pitchingStats.wins || 0}-${pitchingStats.losses || 0}`
+        }
+      };
+    } catch (error) {
+      console.error('Error fetching season stats:', error);
+      return {
+        batting: {},
+        pitching: {}
+      };
+    }
+  }
+
+  async getTeamRoster(teamId, season = new Date().getFullYear()) {
+    try {
+      const url = `${this.BASE_URL}/teams/${teamId}/roster?season=${season}`;
+      const response = await fetch(url);
+      const data = await response.json();
+      
+      if (!data || !data.roster) {
+        console.error('Invalid roster data received');
+        return [];
+      }
+  
+      // Process and enrich roster data
+      const enrichedRoster = await Promise.all(
+        data.roster.map(async player => {
+          // Get detailed player stats using new method
+          const playerStats = await this.getPlayerSeasonAndGameStats(player.person.id);
+          // const playerStats = await this.getPlayerSeasonStats(player.person.id);
+
+          
+          
+          return {
+            id: player.person.id,
+            name: player.person.fullName,
+            position: player.position.abbreviation,
+            jerseyNumber: player.jerseyNumber || 'N/A',
+            status: player.status.description,
+            stats: playerStats,
+            team: {
+              id: teamId,
+              name: data.teamName || await this.getTeamName(teamId)
+            }
+          };
+        })
+      );
+  
+      return enrichedRoster;
+    } catch (error) {
+      console.error('Error fetching team roster:', error);
+      return [];
+    }
+  }
+  
+  async getTeamName(teamId) {
+    try {
+      const url = `${this.BASE_URL}/teams/${teamId}`;
+      const response = await fetch(url);
+      const data = await response.json();
+      return data.teams[0]?.name || 'Unknown Team';
+    } catch (error) {
+      console.error('Error fetching team name:', error);
+      return 'Unknown Team';
+    }
+  }
+  
+  // Cache management methods
+  async cacheTeamRoster(teamId) {
+    const roster = await this.getTeamRoster(teamId);
+    this.rosterCache.set(teamId, {
+      timestamp: Date.now(),
+      data: roster
+    });
+    return roster;
+  }
+  
+  async getRosterWithCache(teamId) {
+    const cachedData = this.rosterCache.get(teamId);
+    const cacheExpiry = 5 * 60 * 1000; // 5 minutes
+  
+    if (cachedData && Date.now() - cachedData.timestamp < cacheExpiry) {
+      return cachedData.data;
+    }
+  
+    return this.cacheTeamRoster(teamId);
+  }
+  
+  // Helper method to process player stats (uses existing getPlayerSeasonStats)
+  async enrichPlayerStats(playerId) {
+    const seasonStats = await this.getPlayerSeasonStats(playerId);
+    
+    if (!seasonStats) return null;
+  
+    return {
+      batting: {
+        avg: seasonStats.batting?.avg || '.000',
+        homeRuns: seasonStats.batting?.homeRuns || 0,
+        rbi: seasonStats.batting?.rbi || 0,
+        ops: seasonStats.batting?.ops || '.000',
+        stolenBases: seasonStats.batting?.stolenBases || 0,
+        hits: seasonStats.batting?.hits || 0,
+        atBats: seasonStats.batting?.atBats || 0
+      },
+      pitching: {
+        era: seasonStats.pitching?.era || '0.00',
+        wins: seasonStats.pitching?.wins || 0,
+        losses: seasonStats.pitching?.losses || 0,
+        strikeouts: seasonStats.pitching?.strikeouts || 0,
+        whip: seasonStats.pitching?.whip || '0.00',
+        inningsPitched: seasonStats.pitching?.inningsPitched || '0.0',
+        record: `${seasonStats.pitching?.wins || 0}-${seasonStats.pitching?.losses || 0}`
+      }
+    };
+  }
 
   async getHeadToHeadRecord(awayTeamId, homeTeamId, cutoffDateTime) {
     console.log("Away team id: ", awayTeamId);
